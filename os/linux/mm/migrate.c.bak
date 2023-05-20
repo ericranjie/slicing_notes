@@ -686,7 +686,7 @@ int migrate_folio(struct address_space *mapping, struct folio *dst,
 }
 EXPORT_SYMBOL(migrate_folio);
 
-#ifdef CONFIG_BLOCK // @slice: Block Buffer宏
+#ifdef CONFIG_BLOCK // Block Buffer宏
 /* Returns true if all buffers are successfully locked */
 static bool buffer_migrate_lock_buffers(struct buffer_head *head,
 							enum migrate_mode mode)

@@ -109,20 +109,21 @@ void MinHeap::deleteKey(int i) {
     extractMin();
 }
 
+// @slice: 递归最小堆化函数
 /** A recursive method to heapify a subtree with the root at given index
  *  This method assumes that the subtrees are already heapified
  */
 void MinHeap::MinHeapify(int i) {
     int l = left(i);
     int r = right(i);
-    int smallest = i;
+    int smallest = i; // @slice: 记录子结点最小值
     if (l < heap_size && harr[l] < harr[i])
         smallest = l;
     if (r < heap_size && harr[r] < harr[smallest])
         smallest = r;
     if (smallest != i) {
         std::swap(harr[i], harr[smallest]);
-        MinHeapify(smallest);
+        MinHeapify(smallest); // @slice: 向下递归
     }
 }
 
