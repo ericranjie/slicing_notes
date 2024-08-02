@@ -717,7 +717,7 @@ retry:
  * unmap operations to reduce IPIs.
  */
 static bool should_defer_flush(struct mm_struct *mm, enum ttu_flags flags)
-{
+{ // Aux:
 	if (!(flags & TTU_BATCH_FLUSH))
 		return false;
 
@@ -772,7 +772,7 @@ static bool should_defer_flush(struct mm_struct *mm, enum ttu_flags flags)
  * Caller should check the page is actually part of the vma.
  */
 unsigned long page_address_in_vma(struct page *page, struct vm_area_struct *vma)
-{
+{ // Aux:
 	struct folio *folio = page_folio(page);
 	pgoff_t pgoff;
 
@@ -802,7 +802,7 @@ unsigned long page_address_in_vma(struct page *page, struct vm_area_struct *vma)
  * represents.
  */
 pmd_t *mm_find_pmd(struct mm_struct *mm, unsigned long address)
-{
+{ // Aux:
 	pgd_t *pgd;
 	p4d_t *p4d;
 	pud_t *pud;
@@ -837,16 +837,16 @@ struct folio_referenced_arg {
  */
 static bool folio_referenced_one(struct folio *folio,
 		struct vm_area_struct *vma, unsigned long address, void *arg)
-{
+{ // Worker:
 	struct folio_referenced_arg *pra = arg;
 	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, 0);
 	int referenced = 0;
 	unsigned long start = address, ptes = 0;
 
-	while (page_vma_mapped_walk(&pvmw)) {
+	while (page_vma_mapped_walk(&pvmw)) { // Loop:
 		address = pvmw.address;
 
-		if (vma->vm_flags & VM_LOCKED) {
+		if (vma->vm_flags & VM_LOCKED) { // Branch:
 			if (!folio_test_large(folio) || !pvmw.pte) {
 				/* Restore the mlock which got missed */
 				mlock_vma_folio(folio, vma);
@@ -870,7 +870,7 @@ static bool folio_referenced_one(struct folio *folio,
 			continue;
 		}
 
-		if (pvmw.pte) {
+		if (pvmw.pte) { // Branch: PTE存在
 			if (lru_gen_enabled() &&
 			    pte_young(ptep_get(pvmw.pte))) {
 				lru_gen_look_around(&pvmw);
@@ -880,11 +880,11 @@ static bool folio_referenced_one(struct folio *folio,
 			if (ptep_clear_flush_young_notify(vma, address,
 						pvmw.pte))
 				referenced++;
-		} else if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE)) {
+		} else if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE)) { // Branch:
 			if (pmdp_clear_flush_young_notify(vma, address,
 						pvmw.pmd))
 				referenced++;
-		} else {
+		} else { // Branch:
 			/* unexpected pmd-mapped folio? */
 			WARN_ON_ONCE(1);
 		}
@@ -895,7 +895,7 @@ static bool folio_referenced_one(struct folio *folio,
 	if ((vma->vm_flags & VM_LOCKED) &&
 			folio_test_large(folio) &&
 			folio_within_vma(folio, vma)) {
-		unsigned long s_align, e_align;
+		unsigned long s_align, e_align; // 左右双指针
 
 		s_align = ALIGN_DOWN(start, PMD_SIZE);
 		e_align = ALIGN_DOWN(start + folio_size(folio) - 1, PMD_SIZE);
@@ -912,7 +912,7 @@ static bool folio_referenced_one(struct folio *folio,
 	if (referenced)
 		folio_clear_idle(folio);
 	if (folio_test_clear_young(folio))
-		referenced++;
+		referenced++; // 引用数自增
 
 	if (referenced) {
 		pra->referenced++;
@@ -963,14 +963,14 @@ static bool invalid_folio_referenced_vma(struct vm_area_struct *vma, void *arg)
  */
 int folio_referenced(struct folio *folio, int is_locked,
 		     struct mem_cgroup *memcg, unsigned long *vm_flags)
-{
+{ // Aux:(Main)
 	bool we_locked = false;
 	struct folio_referenced_arg pra = {
 		.mapcount = folio_mapcount(folio),
 		.memcg = memcg,
 	};
 	struct rmap_walk_control rwc = {
-		.rmap_one = folio_referenced_one,
+		.rmap_one = folio_referenced_one, // Worker:
 		.arg = (void *)&pra,
 		.anon_lock = folio_lock_anon_vma_read,
 		.try_lock = true,
@@ -985,27 +985,27 @@ int folio_referenced(struct folio *folio, int is_locked,
 		return 0;
 
 	if (!is_locked && (!folio_test_anon(folio) || folio_test_ksm(folio))) {
-		we_locked = folio_trylock(folio);
+		we_locked = folio_trylock(folio); // Trylock:
 		if (!we_locked)
 			return 1;
 	}
 
-	rmap_walk(folio, &rwc);
+	rmap_walk(folio, &rwc); // Main:
 	*vm_flags = pra.vm_flags;
 
 	if (we_locked)
-		folio_unlock(folio);
+		folio_unlock(folio); // Unlock:
 
 	return rwc.contended ? -1 : pra.referenced;
 }
 
 static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
-{
+{ // Worker:
 	int cleaned = 0;
 	struct vm_area_struct *vma = pvmw->vma;
 	struct mmu_notifier_range range;
 	unsigned long address = pvmw->address;
-
+  // Init:
 	/*
 	 * We have to assume the worse case ie pmd for invalidation. Note that
 	 * the folio can not be freed from this function.
@@ -1014,15 +1014,15 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
 				vma->vm_mm, address, vma_address_end(pvmw));
 	mmu_notifier_invalidate_range_start(&range);
 
-	while (page_vma_mapped_walk(pvmw)) {
+	while (page_vma_mapped_walk(pvmw)) { // Loop:
 		int ret = 0;
 
 		address = pvmw->address;
-		if (pvmw->pte) {
+		if (pvmw->pte) { // Branch: PTE存在
 			pte_t *pte = pvmw->pte;
 			pte_t entry = ptep_get(pte);
 
-			if (!pte_dirty(entry) && !pte_write(entry))
+			if (!pte_dirty(entry) && !pte_write(entry)) // Guard:
 				continue;
 
 			flush_cache_page(vma, address, pte_pfn(entry));
@@ -1031,7 +1031,7 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
 			entry = pte_mkclean(entry);
 			set_pte_at(vma->vm_mm, address, pte, entry);
 			ret = 1;
-		} else {
+		} else { // Branch: PTE不存在
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 			pmd_t *pmd = pvmw->pmd;
 			pmd_t entry;
@@ -1063,7 +1063,7 @@ static int page_vma_mkclean_one(struct page_vma_mapped_walk *pvmw)
 
 static bool page_mkclean_one(struct folio *folio, struct vm_area_struct *vma,
 			     unsigned long address, void *arg)
-{
+{ // Aux:
 	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, PVMW_SYNC);
 	int *cleaned = arg;
 
@@ -1073,7 +1073,7 @@ static bool page_mkclean_one(struct folio *folio, struct vm_area_struct *vma,
 }
 
 static bool invalid_mkclean_vma(struct vm_area_struct *vma, void *arg)
-{
+{ // Aux:
 	if (vma->vm_flags & VM_SHARED)
 		return false;
 
@@ -1081,12 +1081,12 @@ static bool invalid_mkclean_vma(struct vm_area_struct *vma, void *arg)
 }
 
 int folio_mkclean(struct folio *folio)
-{
+{ // Main: Entrance
 	int cleaned = 0;
 	struct address_space *mapping;
 	struct rmap_walk_control rwc = {
 		.arg = (void *)&cleaned,
-		.rmap_one = page_mkclean_one,
+		.rmap_one = page_mkclean_one, // Worker:
 		.invalid_vma = invalid_mkclean_vma,
 	};
 
@@ -1099,7 +1099,7 @@ int folio_mkclean(struct folio *folio)
 	if (!mapping)
 		return 0;
 
-	rmap_walk(folio, &rwc);
+	rmap_walk(folio, &rwc); // Main:
 
 	return cleaned;
 }
@@ -1119,7 +1119,7 @@ EXPORT_SYMBOL_GPL(folio_mkclean);
  */
 int pfn_mkclean_range(unsigned long pfn, unsigned long nr_pages, pgoff_t pgoff,
 		      struct vm_area_struct *vma)
-{
+{ // Aux:
 	struct page_vma_mapped_walk pvmw = {
 		.pfn		= pfn,
 		.nr_pages	= nr_pages,
@@ -1128,7 +1128,7 @@ int pfn_mkclean_range(unsigned long pfn, unsigned long nr_pages, pgoff_t pgoff,
 		.flags		= PVMW_SYNC,
 	};
 
-	if (invalid_mkclean_vma(vma, NULL))
+	if (invalid_mkclean_vma(vma, NULL)) // Guard:
 		return 0;
 
 	pvmw.address = vma_address(vma, pgoff, nr_pages);
@@ -1140,15 +1140,15 @@ int pfn_mkclean_range(unsigned long pfn, unsigned long nr_pages, pgoff_t pgoff,
 static __always_inline unsigned int __folio_add_rmap(struct folio *folio,
 		struct page *page, int nr_pages, enum rmap_level level,
 		int *nr_pmdmapped)
-{
+{ // Worker:
 	atomic_t *mapped = &folio->_nr_pages_mapped;
 	const int orig_nr_pages = nr_pages;
 	int first, nr = 0;
-
+  // Guard:
 	__folio_rmap_sanity_checks(folio, page, nr_pages, level);
 
 	switch (level) {
-	case RMAP_LEVEL_PTE:
+	case RMAP_LEVEL_PTE: // Branch: PTE-底层
 		if (!folio_test_large(folio)) {
 			nr = atomic_inc_and_test(&page->_mapcount);
 			break;
@@ -1164,7 +1164,7 @@ static __always_inline unsigned int __folio_add_rmap(struct folio *folio,
 		} while (page++, --nr_pages > 0);
 		atomic_add(orig_nr_pages, &folio->_large_mapcount);
 		break;
-	case RMAP_LEVEL_PMD:
+	case RMAP_LEVEL_PMD: // Branch: PMD-中层
 		first = atomic_inc_and_test(&folio->_entire_mapcount);
 		if (first) {
 			nr = atomic_add_return_relaxed(ENTIRELY_MAPPED, mapped);
@@ -1195,7 +1195,7 @@ static __always_inline unsigned int __folio_add_rmap(struct folio *folio,
  * process, so the rmap code will not search the parent or sibling processes.
  */
 void folio_move_anon_rmap(struct folio *folio, struct vm_area_struct *vma)
-{
+{ // Aux:
 	void *anon_vma = vma->anon_vma;
 
 	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
@@ -1219,7 +1219,7 @@ void folio_move_anon_rmap(struct folio *folio, struct vm_area_struct *vma)
  */
 static void __folio_set_anon(struct folio *folio, struct vm_area_struct *vma,
 			     unsigned long address, bool exclusive)
-{
+{ // Aux:
 	struct anon_vma *anon_vma = vma->anon_vma;
 
 	BUG_ON(!anon_vma);
@@ -1270,7 +1270,7 @@ static void __page_check_anon_rmap(struct folio *folio, struct page *page,
 }
 
 static void __folio_mod_stat(struct folio *folio, int nr, int nr_pmdmapped)
-{
+{ // Aux:
 	int idx;
 
 	if (nr) {
@@ -1294,30 +1294,30 @@ static void __folio_mod_stat(struct folio *folio, int nr, int nr_pmdmapped)
 static __always_inline void __folio_add_anon_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
 		unsigned long address, rmap_t flags, enum rmap_level level)
-{
+{ // Main: Integrator
 	int i, nr, nr_pmdmapped = 0;
 
-	VM_WARN_ON_FOLIO(!folio_test_anon(folio), folio);
+	VM_WARN_ON_FOLIO(!folio_test_anon(folio), folio); // Guard:
 
 	nr = __folio_add_rmap(folio, page, nr_pages, level, &nr_pmdmapped);
 
-	if (likely(!folio_test_ksm(folio)))
+	if (likely(!folio_test_ksm(folio))) // Branch: KSM
 		__page_check_anon_rmap(folio, page, vma, address);
 
 	__folio_mod_stat(folio, nr, nr_pmdmapped);
 
 	if (flags & RMAP_EXCLUSIVE) {
 		switch (level) {
-		case RMAP_LEVEL_PTE:
+		case RMAP_LEVEL_PTE: // Branch: PTE-底层
 			for (i = 0; i < nr_pages; i++)
 				SetPageAnonExclusive(page + i);
 			break;
-		case RMAP_LEVEL_PMD:
+		case RMAP_LEVEL_PMD: // Branch: PMD-中层
 			SetPageAnonExclusive(page);
 			break;
 		}
 	}
-	for (i = 0; i < nr_pages; i++) {
+	for (i = 0; i < nr_pages; i++) { // Loop:
 		struct page *cur_page = page + i;
 
 		/* While PTE-mapping a THP we have a PMD and a PTE mapping. */
@@ -1356,7 +1356,7 @@ static __always_inline void __folio_add_anon_rmap(struct folio *folio,
 void folio_add_anon_rmap_ptes(struct folio *folio, struct page *page,
 		int nr_pages, struct vm_area_struct *vma, unsigned long address,
 		rmap_t flags)
-{
+{ // Wrapper: PTE
 	__folio_add_anon_rmap(folio, page, nr_pages, vma, address, flags,
 			      RMAP_LEVEL_PTE);
 }
@@ -1376,7 +1376,7 @@ void folio_add_anon_rmap_ptes(struct folio *folio, struct page *page,
  */
 void folio_add_anon_rmap_pmd(struct folio *folio, struct page *page,
 		struct vm_area_struct *vma, unsigned long address, rmap_t flags)
-{
+{ // Wrapper: PMD
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 	__folio_add_anon_rmap(folio, page, HPAGE_PMD_NR, vma, address, flags,
 			      RMAP_LEVEL_PMD);
@@ -1402,11 +1402,11 @@ void folio_add_anon_rmap_pmd(struct folio *folio, struct page *page,
  */
 void folio_add_new_anon_rmap(struct folio *folio, struct vm_area_struct *vma,
 		unsigned long address, rmap_t flags)
-{
+{ // Main: Integrator
 	const int nr = folio_nr_pages(folio);
 	const bool exclusive = flags & RMAP_EXCLUSIVE;
 	int nr_pmdmapped = 0;
-
+  // Guard:
 	VM_WARN_ON_FOLIO(folio_test_hugetlb(folio), folio);
 	VM_WARN_ON_FOLIO(!exclusive && !folio_test_locked(folio), folio);
 	VM_BUG_ON_VMA(address < vma->vm_start ||
@@ -1420,12 +1420,12 @@ void folio_add_new_anon_rmap(struct folio *folio, struct vm_area_struct *vma,
 		__folio_set_swapbacked(folio);
 	__folio_set_anon(folio, vma, address, exclusive);
 
-	if (likely(!folio_test_large(folio))) {
+	if (likely(!folio_test_large(folio))) { // Branch:
 		/* increment count (starts at -1) */
 		atomic_set(&folio->_mapcount, 0);
 		if (exclusive)
 			SetPageAnonExclusive(&folio->page);
-	} else if (!folio_test_pmd_mappable(folio)) {
+	} else if (!folio_test_pmd_mappable(folio)) { // Branch:
 		int i;
 
 		for (i = 0; i < nr; i++) {
@@ -1440,7 +1440,7 @@ void folio_add_new_anon_rmap(struct folio *folio, struct vm_area_struct *vma,
 		/* increment count (starts at -1) */
 		atomic_set(&folio->_large_mapcount, nr - 1);
 		atomic_set(&folio->_nr_pages_mapped, nr);
-	} else {
+	} else { // Branch: Normal
 		/* increment count (starts at -1) */
 		atomic_set(&folio->_entire_mapcount, 0);
 		/* increment count (starts at -1) */
@@ -1457,7 +1457,7 @@ void folio_add_new_anon_rmap(struct folio *folio, struct vm_area_struct *vma,
 static __always_inline void __folio_add_file_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
 		enum rmap_level level)
-{
+{ // Wrapper:
 	int nr, nr_pmdmapped = 0;
 
 	VM_WARN_ON_FOLIO(folio_test_anon(folio), folio);
@@ -1510,7 +1510,7 @@ void folio_add_file_rmap_pmd(struct folio *folio, struct page *page,
 static __always_inline void __folio_remove_rmap(struct folio *folio,
 		struct page *page, int nr_pages, struct vm_area_struct *vma,
 		enum rmap_level level)
-{
+{ // Worker:
 	atomic_t *mapped = &folio->_nr_pages_mapped;
 	int last, nr = 0, nr_pmdmapped = 0;
 	bool partially_mapped = false;
@@ -1518,7 +1518,7 @@ static __always_inline void __folio_remove_rmap(struct folio *folio,
 	__folio_rmap_sanity_checks(folio, page, nr_pages, level);
 
 	switch (level) {
-	case RMAP_LEVEL_PTE:
+	case RMAP_LEVEL_PTE: // Branch: PTE-底层
 		if (!folio_test_large(folio)) {
 			nr = atomic_add_negative(-1, &page->_mapcount);
 			break;
@@ -1536,7 +1536,7 @@ static __always_inline void __folio_remove_rmap(struct folio *folio,
 
 		partially_mapped = nr && atomic_read(mapped);
 		break;
-	case RMAP_LEVEL_PMD:
+	case RMAP_LEVEL_PMD: // Branch: PMD-中层
 		atomic_dec(&folio->_large_mapcount);
 		last = atomic_add_negative(-1, &folio->_entire_mapcount);
 		if (last) {
@@ -1595,7 +1595,7 @@ static __always_inline void __folio_remove_rmap(struct folio *folio,
  */
 void folio_remove_rmap_ptes(struct folio *folio, struct page *page,
 		int nr_pages, struct vm_area_struct *vma)
-{
+{ // Wrapper:
 	__folio_remove_rmap(folio, page, nr_pages, vma, RMAP_LEVEL_PTE);
 }
 
@@ -1611,7 +1611,7 @@ void folio_remove_rmap_ptes(struct folio *folio, struct page *page,
  */
 void folio_remove_rmap_pmd(struct folio *folio, struct page *page,
 		struct vm_area_struct *vma)
-{
+{	// Wrapper:
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
 	__folio_remove_rmap(folio, page, HPAGE_PMD_NR, vma, RMAP_LEVEL_PMD);
 #else
@@ -1624,7 +1624,7 @@ void folio_remove_rmap_pmd(struct folio *folio, struct page *page,
  */
 static bool try_to_unmap_one(struct folio *folio, struct vm_area_struct *vma,
 		     unsigned long address, void *arg)
-{
+{ // Main: Worker(High-Complexity)
 	struct mm_struct *mm = vma->vm_mm;
 	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, 0);
 	pte_t pteval;
@@ -1707,7 +1707,7 @@ static bool try_to_unmap_one(struct folio *folio, struct vm_area_struct *vma,
 		anon_exclusive = folio_test_anon(folio) &&
 				 PageAnonExclusive(subpage);
 
-		if (folio_test_hugetlb(folio)) {
+		if (folio_test_hugetlb(folio)) { // Branch: HugeTLB
 			bool anon = folio_test_anon(folio);
 
 			/*
@@ -1757,7 +1757,7 @@ static bool try_to_unmap_one(struct folio *folio, struct vm_area_struct *vma,
 				hugetlb_vma_unlock_write(vma);
 			}
 			pteval = huge_ptep_clear_flush(vma, address, pvmw.pte);
-		} else {
+		} else { // Branch: Normal
 			flush_cache_page(vma, address, pfn);
 			/* Nuke the page table entry. */
 			if (should_defer_flush(mm, flags)) {
@@ -1785,7 +1785,7 @@ static bool try_to_unmap_one(struct folio *folio, struct vm_area_struct *vma,
 		pte_install_uffd_wp_if_needed(vma, address, pvmw.pte, pteval);
 
 		/* Set the dirty flag on the folio now the pte is gone. */
-		if (pte_dirty(pteval))
+		if (pte_dirty(pteval)) // Guard:
 			folio_mark_dirty(folio);
 
 		/* Update high watermark before we lower rss */
@@ -1814,7 +1814,7 @@ static bool try_to_unmap_one(struct folio *folio, struct vm_area_struct *vma,
 			 * copied pages.
 			 */
 			dec_mm_counter(mm, mm_counter(folio));
-		} else if (folio_test_anon(folio)) {
+		} else if (folio_test_anon(folio)) { // Branch: Anonymous
 			swp_entry_t entry = page_swap_entry(subpage);
 			pte_t swp_pte;
 			/*
@@ -1910,7 +1910,7 @@ static bool try_to_unmap_one(struct folio *folio, struct vm_area_struct *vma,
 			if (pte_uffd_wp(pteval))
 				swp_pte = pte_swp_mkuffd_wp(swp_pte);
 			set_pte_at(mm, address, pvmw.pte, swp_pte);
-		} else {
+		} else { // Branch: Normal
 			/*
 			 * This is a locked file-backed folio,
 			 * so it cannot be removed from the page
@@ -1967,7 +1967,7 @@ static int folio_not_mapped(struct folio *folio)
  * Context: Caller must hold the folio lock.
  */
 void try_to_unmap(struct folio *folio, enum ttu_flags flags)
-{
+{	// Worker:
 	struct rmap_walk_control rwc = {
 		.rmap_one = try_to_unmap_one,
 		.arg = (void *)flags,
@@ -1976,9 +1976,9 @@ void try_to_unmap(struct folio *folio, enum ttu_flags flags)
 	};
 
 	if (flags & TTU_RMAP_LOCKED)
-		rmap_walk_locked(folio, &rwc);
+		rmap_walk_locked(folio, &rwc); // Main: 1
 	else
-		rmap_walk(folio, &rwc);
+		rmap_walk(folio, &rwc); // Main: 2
 }
 
 /*
@@ -1989,7 +1989,7 @@ void try_to_unmap(struct folio *folio, enum ttu_flags flags)
  */
 static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 		     unsigned long address, void *arg)
-{
+{ // Main: Worker
 	struct mm_struct *mm = vma->vm_mm;
 	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, 0);
 	pte_t pteval;
@@ -2063,7 +2063,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 
 		pfn = pte_pfn(ptep_get(pvmw.pte));
 
-		if (folio_is_zone_device(folio)) {
+		if (folio_is_zone_device(folio)) { // Branch: Zone-Device
 			/*
 			 * Our PTE is a non-present device exclusive entry and
 			 * calculating the subpage as for the common case would
@@ -2083,7 +2083,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 		anon_exclusive = folio_test_anon(folio) &&
 				 PageAnonExclusive(subpage);
 
-		if (folio_test_hugetlb(folio)) {
+		if (folio_test_hugetlb(folio)) { // Branch: HugeTLB
 			bool anon = folio_test_anon(folio);
 
 			/*
@@ -2134,7 +2134,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 			}
 			/* Nuke the hugetlb page table entry */
 			pteval = huge_ptep_clear_flush(vma, address, pvmw.pte);
-		} else {
+		} else { // Branch: Normal-TLB
 			flush_cache_page(vma, address, pfn);
 			/* Nuke the page table entry. */
 			if (should_defer_flush(mm, flags)) {
@@ -2155,13 +2155,13 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 		}
 
 		/* Set the dirty flag on the folio now the pte is gone. */
-		if (pte_dirty(pteval))
+		if (pte_dirty(pteval)) // Guard:
 			folio_mark_dirty(folio);
 
 		/* Update high watermark before we lower rss */
 		update_hiwater_rss(mm);
 
-		if (folio_is_device_private(folio)) {
+		if (folio_is_device_private(folio)) { // Branch: Device
 			unsigned long pfn = folio_pfn(folio);
 			swp_entry_t entry;
 			pte_t swp_pte;
@@ -2199,7 +2199,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 			 * No need to invalidate here it will synchronize on
 			 * against the special swap migration pte.
 			 */
-		} else if (PageHWPoison(subpage)) {
+		} else if (PageHWPoison(subpage)) { // Branch:
 			pteval = swp_entry_to_pte(make_hwpoison_entry(subpage));
 			if (folio_test_hugetlb(folio)) {
 				hugetlb_count_sub(folio_nr_pages(folio), mm);
@@ -2222,7 +2222,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 			 * copied pages.
 			 */
 			dec_mm_counter(mm, mm_counter(folio));
-		} else {
+		} else { // Branch: Normal
 			swp_entry_t entry;
 			pte_t swp_pte;
 
@@ -2237,10 +2237,10 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 				break;
 			}
 			VM_BUG_ON_PAGE(pte_write(pteval) && folio_test_anon(folio) &&
-				       !anon_exclusive, subpage);
+				       !anon_exclusive, subpage); // Guard:
 
 			/* See folio_try_share_anon_rmap_pte(): clear PTE first. */
-			if (folio_test_hugetlb(folio)) {
+			if (folio_test_hugetlb(folio)) { // Branch: HugeTLB
 				if (anon_exclusive &&
 				    hugetlb_try_share_anon_rmap(folio)) {
 					set_huge_pte_at(mm, address, pvmw.pte,
@@ -2249,7 +2249,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 					page_vma_mapped_walk_done(&pvmw);
 					break;
 				}
-			} else if (anon_exclusive &&
+			} else if (anon_exclusive && // Branch:
 				   folio_try_share_anon_rmap_pte(folio, subpage)) {
 				set_pte_at(mm, address, pvmw.pte, pteval);
 				ret = false;
@@ -2280,13 +2280,13 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 				swp_pte = pte_swp_mksoft_dirty(swp_pte);
 			if (pte_uffd_wp(pteval))
 				swp_pte = pte_swp_mkuffd_wp(swp_pte);
-			if (folio_test_hugetlb(folio))
+			if (folio_test_hugetlb(folio)) // Branch: HugeTLB
 				set_huge_pte_at(mm, address, pvmw.pte, swp_pte,
 						hsz);
-			else
+			else // Branch: Normal
 				set_pte_at(mm, address, pvmw.pte, swp_pte);
 			trace_set_migration_pte(address, pte_val(swp_pte),
-						folio_order(folio));
+						folio_order(folio)); // Trace:
 			/*
 			 * No need to invalidate here it will synchronize on
 			 * against the special swap migration pte.
@@ -2318,7 +2318,7 @@ static bool try_to_migrate_one(struct folio *folio, struct vm_area_struct *vma,
 void try_to_migrate(struct folio *folio, enum ttu_flags flags)
 {
 	struct rmap_walk_control rwc = {
-		.rmap_one = try_to_migrate_one,
+		.rmap_one = try_to_migrate_one, // Main: 0
 		.arg = (void *)flags,
 		.done = folio_not_mapped,
 		.anon_lock = folio_lock_anon_vma_read,
@@ -2330,11 +2330,11 @@ void try_to_migrate(struct folio *folio, enum ttu_flags flags)
 	 */
 	if (WARN_ON_ONCE(flags & ~(TTU_RMAP_LOCKED | TTU_SPLIT_HUGE_PMD |
 					TTU_SYNC | TTU_BATCH_FLUSH)))
-		return;
+		return; // Guard:
 
 	if (folio_is_zone_device(folio) &&
 	    (!folio_is_device_private(folio) && !folio_is_device_coherent(folio)))
-		return;
+		return; // Guard:
 
 	/*
 	 * During exec, a temporary VMA is setup and later moved.
@@ -2348,12 +2348,12 @@ void try_to_migrate(struct folio *folio, enum ttu_flags flags)
 		rwc.invalid_vma = invalid_migration_vma;
 
 	if (flags & TTU_RMAP_LOCKED)
-		rmap_walk_locked(folio, &rwc);
+		rmap_walk_locked(folio, &rwc); // Main: 1
 	else
-		rmap_walk(folio, &rwc);
+		rmap_walk(folio, &rwc); // Main: 2
 }
 
-#ifdef CONFIG_DEVICE_PRIVATE
+#ifdef CONFIG_DEVICE_PRIVATE // Appendix: Device
 struct make_exclusive_args {
 	struct mm_struct *mm;
 	unsigned long address;
@@ -2363,7 +2363,7 @@ struct make_exclusive_args {
 
 static bool page_make_device_exclusive_one(struct folio *folio,
 		struct vm_area_struct *vma, unsigned long address, void *priv)
-{
+{ // Worker:
 	struct mm_struct *mm = vma->vm_mm;
 	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, 0);
 	struct make_exclusive_args *args = priv;
@@ -2460,7 +2460,7 @@ static bool page_make_device_exclusive_one(struct folio *folio,
  */
 static bool folio_make_device_exclusive(struct folio *folio,
 		struct mm_struct *mm, unsigned long address, void *owner)
-{
+{ // Aux:
 	struct make_exclusive_args args = {
 		.mm = mm,
 		.address = address,
@@ -2510,7 +2510,7 @@ static bool folio_make_device_exclusive(struct folio *folio,
 int make_device_exclusive_range(struct mm_struct *mm, unsigned long start,
 				unsigned long end, struct page **pages,
 				void *owner)
-{
+{ // Export:
 	long npages = (end - start) >> PAGE_SHIFT;
 	long i;
 
@@ -2520,7 +2520,7 @@ int make_device_exclusive_range(struct mm_struct *mm, unsigned long start,
 	if (npages < 0)
 		return npages;
 
-	for (i = 0; i < npages; i++, start += PAGE_SIZE) {
+	for (i = 0; i < npages; i++, start += PAGE_SIZE) { // Loop:
 		struct folio *folio = page_folio(pages[i]);
 		if (PageTail(pages[i]) || !folio_trylock(folio)) {
 			folio_put(folio);
@@ -2540,13 +2540,13 @@ int make_device_exclusive_range(struct mm_struct *mm, unsigned long start,
 EXPORT_SYMBOL_GPL(make_device_exclusive_range);
 #endif
 
-void __put_anon_vma(struct anon_vma *anon_vma)
+void __put_anon_vma(struct anon_vma *anon_vma) // Aux:
 {
 	struct anon_vma *root = anon_vma->root;
 
-	anon_vma_free(anon_vma);
+	anon_vma_free(anon_vma); // Main: 1-释放子结点
 	if (root != anon_vma && atomic_dec_and_test(&root->refcount))
-		anon_vma_free(root);
+		anon_vma_free(root); // Main: 2-释放根结点
 }
 
 static struct anon_vma *rmap_walk_anon_lock(struct folio *folio,
@@ -2555,7 +2555,7 @@ static struct anon_vma *rmap_walk_anon_lock(struct folio *folio,
 	struct anon_vma *anon_vma;
 
 	if (rwc->anon_lock)
-		return rwc->anon_lock(folio, rwc);
+		return rwc->anon_lock(folio, rwc); // Main: 1
 
 	/*
 	 * Note: remove_migration_ptes() cannot use folio_lock_anon_vma_read()
@@ -2567,7 +2567,7 @@ static struct anon_vma *rmap_walk_anon_lock(struct folio *folio,
 	if (!anon_vma)
 		return NULL;
 
-	if (anon_vma_trylock_read(anon_vma))
+	if (anon_vma_trylock_read(anon_vma)) // Trylock:
 		goto out;
 
 	if (rwc->try_lock) {
@@ -2576,7 +2576,7 @@ static struct anon_vma *rmap_walk_anon_lock(struct folio *folio,
 		goto out;
 	}
 
-	anon_vma_lock_read(anon_vma);
+	anon_vma_lock_read(anon_vma); // Lock: Read
 out:
 	return anon_vma;
 }
@@ -2592,44 +2592,44 @@ out:
  * chains contained in the anon_vma struct it points to.
  */
 static void rmap_walk_anon(struct folio *folio,
-		struct rmap_walk_control *rwc, bool locked)
+		struct rmap_walk_control *rwc, bool locked) // Main:
 {
 	struct anon_vma *anon_vma;
-	pgoff_t pgoff_start, pgoff_end;
+	pgoff_t pgoff_start, pgoff_end; // 左右范围指针
 	struct anon_vma_chain *avc;
 
-	if (locked) {
+	if (locked) { // 已经加锁
 		anon_vma = folio_anon_vma(folio);
 		/* anon_vma disappear under us? */
 		VM_BUG_ON_FOLIO(!anon_vma, folio);
-	} else {
+	} else { // 未加锁
 		anon_vma = rmap_walk_anon_lock(folio, rwc);
 	}
-	if (!anon_vma)
+	if (!anon_vma) // Guard:
 		return;
 
-	pgoff_start = folio_pgoff(folio);
-	pgoff_end = pgoff_start + folio_nr_pages(folio) - 1;
+	pgoff_start = folio_pgoff(folio); // 左指针定位
+	pgoff_end = pgoff_start + folio_nr_pages(folio) - 1; // 右指针定位
 	anon_vma_interval_tree_foreach(avc, &anon_vma->rb_root,
-			pgoff_start, pgoff_end) {
+			pgoff_start, pgoff_end) { // Loop: vma区间树范围遍历avc
 		struct vm_area_struct *vma = avc->vma;
 		unsigned long address = vma_address(vma, pgoff_start,
 				folio_nr_pages(folio));
 
-		VM_BUG_ON_VMA(address == -EFAULT, vma);
-		cond_resched();
+		VM_BUG_ON_VMA(address == -EFAULT, vma); // Guard:
+		cond_resched(); // Sched:
 
 		if (rwc->invalid_vma && rwc->invalid_vma(vma, rwc->arg))
-			continue;
+			continue; // Guard:
 
-		if (!rwc->rmap_one(folio, vma, address, rwc->arg))
+		if (!rwc->rmap_one(folio, vma, address, rwc->arg)) // Main: 1
 			break;
-		if (rwc->done && rwc->done(folio))
+		if (rwc->done && rwc->done(folio)) // Main: 2
 			break;
 	}
 
 	if (!locked)
-		anon_vma_unlock_read(anon_vma);
+		anon_vma_unlock_read(anon_vma); // Unlock:
 }
 
 /*
@@ -2642,10 +2642,10 @@ static void rmap_walk_anon(struct folio *folio,
  * contained in the address_space struct it points to.
  */
 static void rmap_walk_file(struct folio *folio,
-		struct rmap_walk_control *rwc, bool locked)
+		struct rmap_walk_control *rwc, bool locked) // Main:
 {
 	struct address_space *mapping = folio_mapping(folio);
-	pgoff_t pgoff_start, pgoff_end;
+	pgoff_t pgoff_start, pgoff_end; // 左右范围指针
 	struct vm_area_struct *vma;
 
 	/*
@@ -2654,16 +2654,16 @@ static void rmap_walk_file(struct folio *folio,
 	 * structure at mapping cannot be freed and reused yet,
 	 * so we can safely take mapping->i_mmap_rwsem.
 	 */
-	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio); // Guard:
 
-	if (!mapping)
+	if (!mapping) // Guard:
 		return;
 
 	pgoff_start = folio_pgoff(folio);
 	pgoff_end = pgoff_start + folio_nr_pages(folio) - 1;
-	if (!locked) {
-		if (i_mmap_trylock_read(mapping))
-			goto lookup;
+	if (!locked) { // 没加锁？
+		if (i_mmap_trylock_read(mapping)) // Lock: 活锁加锁成功
+			goto lookup; // 跳到lookup下标
 
 		if (rwc->try_lock) {
 			rwc->contended = true;
@@ -2674,35 +2674,35 @@ static void rmap_walk_file(struct folio *folio,
 	}
 lookup:
 	vma_interval_tree_foreach(vma, &mapping->i_mmap,
-			pgoff_start, pgoff_end) {
+			pgoff_start, pgoff_end) { // Loop: vma区间树范围遍历
 		unsigned long address = vma_address(vma, pgoff_start,
 			       folio_nr_pages(folio));
 
-		VM_BUG_ON_VMA(address == -EFAULT, vma);
+		VM_BUG_ON_VMA(address == -EFAULT, vma); // Guard:
 		cond_resched();
 
 		if (rwc->invalid_vma && rwc->invalid_vma(vma, rwc->arg))
 			continue;
 
-		if (!rwc->rmap_one(folio, vma, address, rwc->arg))
+		if (!rwc->rmap_one(folio, vma, address, rwc->arg)) // Main: 1
 			goto done;
-		if (rwc->done && rwc->done(folio))
+		if (rwc->done && rwc->done(folio)) // Main: 2
 			goto done;
 	}
 
 done:
 	if (!locked)
-		i_mmap_unlock_read(mapping);
+		i_mmap_unlock_read(mapping); // Unlock: mmap解锁
 }
 
 void rmap_walk(struct folio *folio, struct rmap_walk_control *rwc)
 {
 	if (unlikely(folio_test_ksm(folio)))
-		rmap_walk_ksm(folio, rwc);
+		rmap_walk_ksm(folio, rwc); // Branch: 遍历ksm-rmap
 	else if (folio_test_anon(folio))
-		rmap_walk_anon(folio, rwc, false);
+		rmap_walk_anon(folio, rwc, false); // Branch: 遍历匿名-rmap
 	else
-		rmap_walk_file(folio, rwc, false);
+		rmap_walk_file(folio, rwc, false); // Branch: 遍历非匿名-rmap
 }
 
 /* Like rmap_walk, but caller holds relevant rmap lock */
@@ -2716,7 +2716,7 @@ void rmap_walk_locked(struct folio *folio, struct rmap_walk_control *rwc)
 		rmap_walk_file(folio, rwc, true);
 }
 
-#ifdef CONFIG_HUGETLB_PAGE
+#ifdef CONFIG_HUGETLB_PAGE // Ignore: 巨型TLB页
 /*
  * The following two functions are for anonymous (private mapped) hugepages.
  * Unlike common anonymous pages, anonymous hugepages have no accounting code

@@ -3068,7 +3068,7 @@ static bool kcompactd_node_suitable(pg_data_t *pgdat)
 	return false;
 }
 
-static void kcompactd_do_work(pg_data_t *pgdat)
+static void kcompactd_do_work(pg_data_t *pgdat) // Main: Entrance
 {
 	/*
 	 * With no special task, compact all zones so that a page of requested
@@ -3185,7 +3185,7 @@ static int kcompactd(void *p)
 
 	const struct cpumask *cpumask = cpumask_of_node(pgdat->node_id);
 
-	if (!cpumask_empty(cpumask))
+	if (!cpumask_empty(cpumask)) // Guard:
 		set_cpus_allowed_ptr(tsk, cpumask);
 
 	set_freezable();
@@ -3193,7 +3193,7 @@ static int kcompactd(void *p)
 	pgdat->kcompactd_max_order = 0;
 	pgdat->kcompactd_highest_zoneidx = pgdat->nr_zones - 1;
 
-	while (!kthread_should_stop()) {
+	while (!kthread_should_stop()) { // Loop: 一直循环
 		unsigned long pflags;
 
 		/*
@@ -3208,7 +3208,7 @@ static int kcompactd(void *p)
 			!pgdat->proactive_compact_trigger) {
 
 			psi_memstall_enter(&pflags);
-			kcompactd_do_work(pgdat);
+			kcompactd_do_work(pgdat); // Main: Worker-Routine
 			psi_memstall_leave(&pflags);
 			/*
 			 * Reset the timeout value. The defer timeout from
@@ -3255,7 +3255,7 @@ void __meminit kcompactd_run(int nid)
 {
 	pg_data_t *pgdat = NODE_DATA(nid);
 
-	if (pgdat->kcompactd)
+	if (pgdat->kcompactd) // Guard: 已经存在compact daemon线程
 		return;
 
 	pgdat->kcompactd = kthread_run(kcompactd, pgdat, "kcompactd%d", nid);
