@@ -6167,7 +6167,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(follow_pte);
 
-#ifdef CONFIG_HAVE_IOREMAP_PROT
+#ifdef CONFIG_HAVE_IOREMAP_PROT // Module:
 /**
  * generic_access_phys - generic implementation for iomem mmap access
  * @vma: the vma to access
@@ -6236,7 +6236,7 @@ EXPORT_SYMBOL_GPL(generic_access_phys);
  */
 static int __access_remote_vm(struct mm_struct *mm, unsigned long addr,
 			      void *buf, int len, unsigned int gup_flags)
-{
+{ // Worker:(Tier-2)
 	void *old_buf = buf;
 	int write = gup_flags & FOLL_WRITE;
 
@@ -6247,18 +6247,18 @@ static int __access_remote_vm(struct mm_struct *mm, unsigned long addr,
 	addr = untagged_addr_remote(mm, addr);
 
 	/* Avoid triggering the temporary warning in __get_user_pages */
-	if (!vma_lookup(mm, addr) && !expand_stack(mm, addr))
+	if (!vma_lookup(mm, addr) && !expand_stack(mm, addr)) // Guard:
 		return 0;
 
 	/* ignore errors, just check how much was successfully transferred */
-	while (len) {
+	while (len) { // Loop:
 		int bytes, offset;
 		void *maddr;
 		struct vm_area_struct *vma = NULL;
 		struct page *page = get_user_page_vma_remote(mm, addr,
-							     gup_flags, &vma);
+							     gup_flags, &vma); // Aux:
 
-		if (IS_ERR(page)) {
+		if (IS_ERR(page)) { // Branch:(Guard)
 			/* We might need to expand the stack to access it */
 			vma = vma_lookup(mm, addr);
 			if (!vma) {
@@ -6284,18 +6284,18 @@ static int __access_remote_vm(struct mm_struct *mm, unsigned long addr,
 #endif
 			if (bytes <= 0)
 				break;
-		} else {
+		} else { // Branch:(Normal)
 			bytes = len;
 			offset = addr & (PAGE_SIZE-1);
 			if (bytes > PAGE_SIZE-offset)
 				bytes = PAGE_SIZE-offset;
 
 			maddr = kmap_local_page(page);
-			if (write) {
+			if (write) { // Branch: write
 				copy_to_user_page(vma, page, addr,
 						  maddr + offset, buf, bytes);
 				set_page_dirty_lock(page);
-			} else {
+			} else { // Branch: Non-write
 				copy_from_user_page(vma, page, addr,
 						    buf, maddr + offset, bytes);
 			}
@@ -6324,7 +6324,7 @@ static int __access_remote_vm(struct mm_struct *mm, unsigned long addr,
  */
 int access_remote_vm(struct mm_struct *mm, unsigned long addr,
 		void *buf, int len, unsigned int gup_flags)
-{
+{ // Wrapper:
 	return __access_remote_vm(mm, addr, buf, len, gup_flags);
 }
 
@@ -6401,7 +6401,7 @@ static inline int process_huge_page(
 	unsigned long addr_hint, unsigned int nr_pages,
 	int (*process_subpage)(unsigned long addr, int idx, void *arg),
 	void *arg)
-{
+{ // Aux:
 	int i, n, base, l, ret;
 	unsigned long addr = addr_hint &
 		~(((unsigned long)nr_pages << PAGE_SHIFT) - 1);
@@ -6491,12 +6491,12 @@ static int copy_user_gigantic_page(struct folio *dst, struct folio *src,
 				   unsigned long addr,
 				   struct vm_area_struct *vma,
 				   unsigned int nr_pages)
-{
+{ // Worker:
 	int i;
 	struct page *dst_page;
 	struct page *src_page;
 
-	for (i = 0; i < nr_pages; i++) {
+	for (i = 0; i < nr_pages; i++) { // Loop:
 		dst_page = folio_page(dst, i);
 		src_page = folio_page(src, i);
 
@@ -6544,14 +6544,14 @@ int copy_user_large_folio(struct folio *dst, struct folio *src,
 long copy_folio_from_user(struct folio *dst_folio,
 			   const void __user *usr_src,
 			   bool allow_pagefault)
-{
+{ // Main:
 	void *kaddr;
 	unsigned long i, rc = 0;
 	unsigned int nr_pages = folio_nr_pages(dst_folio);
 	unsigned long ret_val = nr_pages * PAGE_SIZE;
 	struct page *subpage;
 
-	for (i = 0; i < nr_pages; i++) {
+	for (i = 0; i < nr_pages; i++) { // Loop:
 		subpage = folio_page(dst_folio, i);
 		kaddr = kmap_local_page(subpage);
 		if (!allow_pagefault)
