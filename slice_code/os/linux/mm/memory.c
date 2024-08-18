@@ -5806,12 +5806,12 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
 	__set_current_state(TASK_RUNNING);
 
 	ret = sanitize_fault_flags(vma, &flags);
-	if (ret)
+	if (ret) // Guard:
 		goto out;
 
 	if (!arch_vma_access_permitted(vma, flags & FAULT_FLAG_WRITE,
 					    flags & FAULT_FLAG_INSTRUCTION,
-					    flags & FAULT_FLAG_REMOTE)) {
+					    flags & FAULT_FLAG_REMOTE)) { // Guard:
 		ret = VM_FAULT_SIGSEGV;
 		goto out;
 	}
@@ -5862,7 +5862,7 @@ out:
 }
 EXPORT_SYMBOL_GPL(handle_mm_fault);
 
-#ifdef CONFIG_LOCK_MM_AND_FIND_VMA
+#ifdef CONFIG_LOCK_MM_AND_FIND_VMA // Module:
 #include <linux/extable.h>
 
 static inline bool get_mmap_lock_carefully(struct mm_struct *mm, struct pt_regs *regs)
@@ -5927,18 +5927,18 @@ struct vm_area_struct *lock_mm_and_find_vma(struct mm_struct *mm,
 {
 	struct vm_area_struct *vma;
 
-	if (!get_mmap_lock_carefully(mm, regs))
+	if (!get_mmap_lock_carefully(mm, regs)) // Guard:
 		return NULL;
 
 	vma = find_vma(mm, addr);
-	if (likely(vma && (vma->vm_start <= addr)))
+	if (likely(vma && (vma->vm_start <= addr))) // Branch:
 		return vma;
 
 	/*
 	 * Well, dang. We might still be successful, but only
 	 * if we can extend a vma to do so.
 	 */
-	if (!vma || !(vma->vm_flags & VM_GROWSDOWN)) {
+	if (!vma || !(vma->vm_flags & VM_GROWSDOWN)) { // Guard:
 		mmap_read_unlock(mm);
 		return NULL;
 	}
@@ -5978,7 +5978,7 @@ fail:
 }
 #endif
 
-#ifdef CONFIG_PER_VMA_LOCK
+#ifdef CONFIG_PER_VMA_LOCK // Module:
 /*
  * Lookup and lock a VMA under RCU protection. Returned VMA is guaranteed to be
  * stable and not isolated. If the VMA is not found or is being modified the
@@ -6029,7 +6029,7 @@ inval:
  * We've already handled the fast-path in-line.
  */
 int __p4d_alloc(struct mm_struct *mm, pgd_t *pgd, unsigned long address)
-{
+{ // Aux:
 	p4d_t *new = p4d_alloc_one(mm, address);
 	if (!new)
 		return -ENOMEM;
@@ -6075,21 +6075,21 @@ int __pud_alloc(struct mm_struct *mm, p4d_t *p4d, unsigned long address)
  * We've already handled the fast-path in-line.
  */
 int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
-{
+{ // Aux:
 	spinlock_t *ptl;
 	pmd_t *new = pmd_alloc_one(mm, address);
 	if (!new)
 		return -ENOMEM;
 
-	ptl = pud_lock(mm, pud);
-	if (!pud_present(*pud)) {
+	ptl = pud_lock(mm, pud); // Lock:
+	if (!pud_present(*pud)) { // Branch: Not-present.
 		mm_inc_nr_pmds(mm);
 		smp_wmb(); /* See comment in pmd_install() */
 		pud_populate(mm, pud, new);
-	} else {	/* Another has populated it */
+	} else {	/* Another has populated it */ // Branch: Present.
 		pmd_free(mm, new);
 	}
-	spin_unlock(ptl);
+	spin_unlock(ptl); // Unlock:
 	return 0;
 }
 #endif /* __PAGETABLE_PMD_FOLDED */
@@ -6133,10 +6133,10 @@ int follow_pte(struct vm_area_struct *vma, unsigned long address,
 
 	mmap_assert_locked(mm);
 	if (unlikely(address < vma->vm_start || address >= vma->vm_end))
-		goto out;
+		goto out; // Guard:
 
 	if (!(vma->vm_flags & (VM_IO | VM_PFNMAP)))
-		goto out;
+		goto out; // Guard:
 
 	pgd = pgd_offset(mm, address);
 	if (pgd_none(*pgd) || unlikely(pgd_bad(*pgd)))
