@@ -1260,23 +1260,23 @@ static inline int
 copy_pud_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
 	       p4d_t *dst_p4d, p4d_t *src_p4d, unsigned long addr,
 	       unsigned long end)
-{
+{ // Aux:
 	struct mm_struct *dst_mm = dst_vma->vm_mm;
 	struct mm_struct *src_mm = src_vma->vm_mm;
 	pud_t *src_pud, *dst_pud;
 	unsigned long next;
 
 	dst_pud = pud_alloc(dst_mm, dst_p4d, addr);
-	if (!dst_pud)
+	if (!dst_pud) // Guard:
 		return -ENOMEM;
 	src_pud = pud_offset(src_p4d, addr);
-	do {
+	do { // Loop:
 		next = pud_addr_end(addr, end);
 		if (pud_trans_huge(*src_pud) || pud_devmap(*src_pud)) {
 			int err;
 
 			VM_BUG_ON_VMA(next-addr != HPAGE_PUD_SIZE, src_vma);
-			err = copy_huge_pud(dst_mm, src_mm,
+			err = copy_huge_pud(dst_mm, src_mm, // Drill:
 					    dst_pud, src_pud, addr, src_vma);
 			if (err == -ENOMEM)
 				return -ENOMEM;
@@ -1297,7 +1297,7 @@ static inline int
 copy_p4d_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
 	       pgd_t *dst_pgd, pgd_t *src_pgd, unsigned long addr,
 	       unsigned long end)
-{
+{ // Aux:
 	struct mm_struct *dst_mm = dst_vma->vm_mm;
 	p4d_t *src_p4d, *dst_p4d;
 	unsigned long next;
@@ -1324,7 +1324,7 @@ copy_p4d_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
  */
 static bool
 vma_needs_copy(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
-{
+{ // Aux:
 	/*
 	 * Always copy pgtables when dst_vma has uffd-wp enabled even if it's
 	 * file-backed (e.g. shmem). Because when uffd-wp is enabled, pgtable
@@ -1351,7 +1351,7 @@ vma_needs_copy(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
 
 int
 copy_page_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
-{
+{ // Worker:
 	pgd_t *src_pgd, *dst_pgd;
 	unsigned long next;
 	unsigned long addr = src_vma->vm_start;
@@ -1362,13 +1362,13 @@ copy_page_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
 	bool is_cow;
 	int ret;
 
-	if (!vma_needs_copy(dst_vma, src_vma))
+	if (!vma_needs_copy(dst_vma, src_vma)) // Guard:
 		return 0;
 
-	if (is_vm_hugetlb_page(src_vma))
+	if (is_vm_hugetlb_page(src_vma)) // Branch:
 		return copy_hugetlb_page_range(dst_mm, src_mm, dst_vma, src_vma);
 
-	if (unlikely(src_vma->vm_flags & VM_PFNMAP)) {
+	if (unlikely(src_vma->vm_flags & VM_PFNMAP)) { // Guard:
 		/*
 		 * We do not free on error cases below as remove_vma
 		 * gets called on error from higher level routine
@@ -2095,7 +2095,7 @@ static int insert_page_in_batch_locked(struct vm_area_struct *vma, pte_t *pte,
  */
 static int insert_pages(struct vm_area_struct *vma, unsigned long addr,
 			struct page **pages, unsigned long *num, pgprot_t prot)
-{
+{ // Aux:
 	pmd_t *pmd = NULL;
 	pte_t *start_pte, *pte;
 	spinlock_t *pte_lock;
@@ -2118,7 +2118,7 @@ more:
 	if (pte_alloc(mm, pmd))
 		goto out;
 
-	while (pages_to_write_in_pmd) {
+	while (pages_to_write_in_pmd) { // Loop: 1
 		int pte_idx = 0;
 		const int batch_size = min_t(int, pages_to_write_in_pmd, 8);
 
@@ -2127,10 +2127,10 @@ more:
 			ret = -EFAULT;
 			goto out;
 		}
-		for (pte = start_pte; pte_idx < batch_size; ++pte, ++pte_idx) {
+		for (pte = start_pte; pte_idx < batch_size; ++pte, ++pte_idx) { // Loop: 2
 			int err = insert_page_in_batch_locked(vma, pte,
 				addr, pages[curr_page_idx], prot);
-			if (unlikely(err)) {
+			if (unlikely(err)) { // Guard:
 				pte_unmap_unlock(start_pte, pte_lock);
 				ret = err;
 				remaining_pages_total -= pte_idx;
@@ -2483,7 +2483,7 @@ static vm_fault_t __vm_insert_mixed(struct vm_area_struct *vma,
 
 	track_pfn_insert(vma, &pgprot, pfn);
 
-	if (!pfn_modify_allowed(pfn_t_to_pfn(pfn), pgprot))
+	if (!pfn_modify_allowed(pfn_t_to_pfn(pfn), pgprot)) // Guard:
 		return VM_FAULT_SIGBUS;
 
 	/*
@@ -2645,7 +2645,7 @@ int remap_pfn_range_notrack(struct vm_area_struct *vma, unsigned long addr,
 	struct mm_struct *mm = vma->vm_mm;
 	int err;
 
-	if (WARN_ON_ONCE(!PAGE_ALIGNED(addr)))
+	if (WARN_ON_ONCE(!PAGE_ALIGNED(addr))) // Guard:
 		return -EINVAL;
 
 	/*
@@ -2678,7 +2678,7 @@ int remap_pfn_range_notrack(struct vm_area_struct *vma, unsigned long addr,
 	pfn -= addr >> PAGE_SHIFT;
 	pgd = pgd_offset(mm, addr);
 	flush_cache_range(vma, addr, end);
-	do {
+	do { // Loop:
 		next = pgd_addr_end(addr, end);
 		err = remap_p4d_range(mm, pgd, addr, next,
 				pfn + (addr >> PAGE_SHIFT), prot);
@@ -2827,7 +2827,7 @@ static int apply_to_pmd_range(struct mm_struct *mm, pud_t *pud,
 	} else {
 		pmd = pmd_offset(pud, addr);
 	}
-	do {
+	do { // Loop:
 		next = pmd_addr_end(addr, end);
 		if (pmd_none(*pmd) && !create)
 			continue;
