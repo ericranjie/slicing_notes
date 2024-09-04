@@ -3,6 +3,7 @@ Merge: 183d46ff422e 5560a612c20d
 Author: Linus Torvalds <torvalds@linux-foundation.org>
 Date:   Thu Aug 1 11:30:15 2024 -0700
 
+// Out: 直接goto出局（Linux特有风格）
 // Guard:
 // Loop:
 // Branch:

@@ -1078,7 +1078,7 @@ static int
 copy_pte_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
 	       pmd_t *dst_pmd, pmd_t *src_pmd, unsigned long addr,
 	       unsigned long end)
-{
+{ // Aux:
 	struct mm_struct *dst_mm = dst_vma->vm_mm;
 	struct mm_struct *src_mm = src_vma->vm_mm;
 	pte_t *orig_src_pte, *orig_dst_pte;
@@ -1104,12 +1104,12 @@ again:
 	 * can remove such assumptions later, but this is good enough for now.
 	 */
 	dst_pte = pte_alloc_map_lock(dst_mm, dst_pmd, addr, &dst_ptl);
-	if (!dst_pte) {
+	if (!dst_pte) { // Out:
 		ret = -ENOMEM;
 		goto out;
 	}
 	src_pte = pte_offset_map_nolock(src_mm, src_pmd, addr, &src_ptl);
-	if (!src_pte) {
+	if (!src_pte) { // Out:
 		pte_unmap_unlock(dst_pte, dst_ptl);
 		/* ret == 0 */
 		goto out;
@@ -1119,7 +1119,7 @@ again:
 	orig_dst_pte = dst_pte;
 	arch_enter_lazy_mmu_mode();
 
-	do {
+	do { // Loop:
 		nr = 1;
 
 		/*
@@ -1163,7 +1163,7 @@ again:
 		/* copy_present_ptes() will clear `*prealloc' if consumed */
 		max_nr = (end - addr) / PAGE_SIZE;
 		ret = copy_present_ptes(dst_vma, src_vma, dst_pte, src_pte,
-					ptent, addr, max_nr, rss, &prealloc);
+					ptent, addr, max_nr, rss, &prealloc); // Drill:
 		/*
 		 * If we need a pre-allocated page for this pte, drop the
 		 * locks, allocate, and try again.
@@ -1223,24 +1223,24 @@ static inline int
 copy_pmd_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma,
 	       pud_t *dst_pud, pud_t *src_pud, unsigned long addr,
 	       unsigned long end)
-{
+{ // Aux:
 	struct mm_struct *dst_mm = dst_vma->vm_mm;
 	struct mm_struct *src_mm = src_vma->vm_mm;
 	pmd_t *src_pmd, *dst_pmd;
 	unsigned long next;
 
 	dst_pmd = pmd_alloc(dst_mm, dst_pud, addr);
-	if (!dst_pmd)
+	if (!dst_pmd) // Guard:
 		return -ENOMEM;
 	src_pmd = pmd_offset(src_pud, addr);
-	do {
+	do { // Loop:
 		next = pmd_addr_end(addr, end);
 		if (is_swap_pmd(*src_pmd) || pmd_trans_huge(*src_pmd)
 			|| pmd_devmap(*src_pmd)) {
 			int err;
 			VM_BUG_ON_VMA(next-addr != HPAGE_PMD_SIZE, src_vma);
 			err = copy_huge_pmd(dst_mm, src_mm, dst_pmd, src_pmd,
-					    addr, dst_vma, src_vma);
+					    addr, dst_vma, src_vma); // Drill:
 			if (err == -ENOMEM)
 				return -ENOMEM;
 			if (!err)
