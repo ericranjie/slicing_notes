@@ -3,7 +3,13 @@ Merge: 183d46ff422e 5560a612c20d
 Author: Linus Torvalds <torvalds@linux-foundation.org>
 Date:   Thu Aug 1 11:30:15 2024 -0700
 
+We use comment tag to mark code block, in order to decrease next time's reading burden.
+
+// Algo: 算法&数据结构
+
 // Out: 直接goto出局（Linux特有风格）
+// Err: 直接错误出局
+
 // Guard:
 // Loop:
 // Branch:

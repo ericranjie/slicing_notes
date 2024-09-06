@@ -2852,13 +2852,13 @@ void mpol_put_task_policy(struct task_struct *task)
 
 static void sp_delete(struct shared_policy *sp, struct sp_node *n)
 {
-	rb_erase(&n->nd, &sp->root);
+	rb_erase(&n->nd, &sp->root); // Algo:
 	sp_free(n);
 }
 
 static void sp_node_init(struct sp_node *node, unsigned long start,
 			unsigned long end, struct mempolicy *pol)
-{
+{ // Aux:
 	node->start = start;
 	node->end = end;
 	node->policy = pol;
@@ -2866,7 +2866,7 @@ static void sp_node_init(struct sp_node *node, unsigned long start,
 
 static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 				struct mempolicy *pol)
-{
+{ // Aux:
 	struct sp_node *n;
 	struct mempolicy *newpol;
 
@@ -2888,7 +2888,7 @@ static struct sp_node *sp_alloc(unsigned long start, unsigned long end,
 /* Replace a policy range. */
 static int shared_policy_replace(struct shared_policy *sp, pgoff_t start,
 				 pgoff_t end, struct sp_node *new)
-{
+{ // Aux:
 	struct sp_node *n;
 	struct sp_node *n_new = NULL;
 	struct mempolicy *mpol_new = NULL;
@@ -2899,7 +2899,7 @@ restart:
 	n = sp_lookup(sp, start, end);
 	/* Take care of old policies in the same range. */
 	while (n && n->start < end) {
-		struct rb_node *next = rb_next(&n->nd);
+		struct rb_node *next = rb_next(&n->nd); // Algo: rbtree
 		if (n->start >= start) {
 			if (n->end <= end)
 				sp_delete(sp, n);
@@ -2963,7 +2963,7 @@ alloc_new:
  * This is called at get_inode() calls and we can use GFP_KERNEL.
  */
 void mpol_shared_policy_init(struct shared_policy *sp, struct mempolicy *mpol)
-{
+{ // Aux:
 	int ret;
 
 	sp->root = RB_ROOT;		/* empty tree == default mempolicy */
@@ -3003,7 +3003,7 @@ put_mpol:
 
 int mpol_set_shared_policy(struct shared_policy *sp,
 			struct vm_area_struct *vma, struct mempolicy *pol)
-{
+{ // Worker:
 	int err;
 	struct sp_node *new = NULL;
 	unsigned long sz = vma_pages(vma);
@@ -3021,14 +3021,14 @@ int mpol_set_shared_policy(struct shared_policy *sp,
 
 /* Free a backing policy store on inode delete. */
 void mpol_free_shared_policy(struct shared_policy *sp)
-{
+{ // Worker:
 	struct sp_node *n;
 	struct rb_node *next;
 
 	if (!sp->root.rb_node)
 		return;
 	write_lock(&sp->lock);
-	next = rb_first(&sp->root);
+	next = rb_first(&sp->root); // Algo: rbtree 红黑树
 	while (next) {
 		n = rb_entry(next, struct sp_node, nd);
 		next = rb_next(&n->nd);
@@ -3041,7 +3041,7 @@ void mpol_free_shared_policy(struct shared_policy *sp)
 static int __initdata numabalancing_override;
 
 static void __init check_numabalancing_enable(void)
-{
+{ // Aux:
 	bool numabalancing_default = false;
 
 	if (IS_ENABLED(CONFIG_NUMA_BALANCING_DEFAULT_ENABLED))
@@ -3169,7 +3169,7 @@ static const char * const policy_modes[] =
  * Return: %0 on success, else %1
  */
 int mpol_parse_str(char *str, struct mempolicy **mpol)
-{
+{ // Aux:
 	struct mempolicy *new = NULL;
 	unsigned short mode_flags;
 	nodemask_t nodes;
@@ -3305,7 +3305,7 @@ out:
  * display at least a few node ids.
  */
 void mpol_to_str(char *buffer, int maxlen, struct mempolicy *pol)
-{
+{ // Aux:
 	char *p = buffer;
 	nodemask_t nodes = NODE_MASK_NONE;
 	unsigned short mode = MPOL_DEFAULT;
@@ -3516,7 +3516,7 @@ static const struct kobj_type mempolicy_ktype = {
 };
 
 static int __init mempolicy_sysfs_init(void)
-{
+{ // Main:
 	int err;
 	static struct kobject *mempolicy_kobj;
 
@@ -3528,18 +3528,18 @@ static int __init mempolicy_sysfs_init(void)
 
 	node_attrs = kcalloc(nr_node_ids, sizeof(struct iw_node_attr *),
 			     GFP_KERNEL);
-	if (!node_attrs) {
+	if (!node_attrs) { // Out:
 		err = -ENOMEM;
 		goto mempol_out;
 	}
 
 	err = kobject_init_and_add(mempolicy_kobj, &mempolicy_ktype, mm_kobj,
 				   "mempolicy");
-	if (err)
+	if (err) // Out:
 		goto node_out;
 
 	err = add_weighted_interleave_group(mempolicy_kobj);
-	if (err) {
+	if (err) { // Err:
 		pr_err("mempolicy sysfs structure failed to initialize\n");
 		kobject_put(mempolicy_kobj);
 		return err;

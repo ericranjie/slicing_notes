@@ -198,14 +198,14 @@ static void free_pte_range(struct mmu_gather *tlb, pmd_t *pmd,
 static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
 				unsigned long addr, unsigned long end,
 				unsigned long floor, unsigned long ceiling)
-{
+{ // Aux:
 	pmd_t *pmd;
 	unsigned long next;
 	unsigned long start;
 
 	start = addr;
 	pmd = pmd_offset(pud, addr);
-	do {
+	do { // Loop:
 		next = pmd_addr_end(addr, end);
 		if (pmd_none_or_clear_bad(pmd))
 			continue;
@@ -232,14 +232,14 @@ static inline void free_pmd_range(struct mmu_gather *tlb, pud_t *pud,
 static inline void free_pud_range(struct mmu_gather *tlb, p4d_t *p4d,
 				unsigned long addr, unsigned long end,
 				unsigned long floor, unsigned long ceiling)
-{
+{ // Aux:
 	pud_t *pud;
 	unsigned long next;
 	unsigned long start;
 
 	start = addr;
 	pud = pud_offset(p4d, addr);
-	do {
+	do { // Loop:
 		next = pud_addr_end(addr, end);
 		if (pud_none_or_clear_bad(pud))
 			continue;
@@ -266,14 +266,14 @@ static inline void free_pud_range(struct mmu_gather *tlb, p4d_t *p4d,
 static inline void free_p4d_range(struct mmu_gather *tlb, pgd_t *pgd,
 				unsigned long addr, unsigned long end,
 				unsigned long floor, unsigned long ceiling)
-{
+{ // Aux:
 	p4d_t *p4d;
 	unsigned long next;
 	unsigned long start;
 
 	start = addr;
 	p4d = p4d_offset(pgd, addr);
-	do {
+	do { // Loop:
 		next = p4d_addr_end(addr, end);
 		if (p4d_none_or_clear_bad(p4d))
 			continue;
