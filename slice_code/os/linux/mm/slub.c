@@ -1541,7 +1541,7 @@ static inline void inc_slabs_node(struct kmem_cache *s, int node, int objects)
 	atomic_long_add(objects, &n->total_objects);
 }
 static inline void dec_slabs_node(struct kmem_cache *s, int node, int objects)
-{
+{ // Aux:
 	struct kmem_cache_node *n = get_node(s, node);
 
 	atomic_long_dec(&n->nr_slabs);
@@ -1550,7 +1550,7 @@ static inline void dec_slabs_node(struct kmem_cache *s, int node, int objects)
 
 /* Object debug checks for alloc/free paths */
 static void setup_object_debug(struct kmem_cache *s, void *object)
-{
+{ // Debug:
 	if (!kmem_cache_debug_flags(s, SLAB_STORE_USER|SLAB_RED_ZONE|__OBJECT_POISON))
 		return;
 
@@ -1560,7 +1560,7 @@ static void setup_object_debug(struct kmem_cache *s, void *object)
 
 static
 void setup_slab_debug(struct kmem_cache *s, struct slab *slab, void *addr)
-{
+{ // Debug:
 	if (!kmem_cache_debug_flags(s, SLAB_POISON))
 		return;
 
@@ -1571,7 +1571,7 @@ void setup_slab_debug(struct kmem_cache *s, struct slab *slab, void *addr)
 
 static inline int alloc_consistency_checks(struct kmem_cache *s,
 					struct slab *slab, void *object)
-{
+{ // Aux:
 	if (!check_slab(s, slab))
 		return 0;
 
@@ -1588,7 +1588,7 @@ static inline int alloc_consistency_checks(struct kmem_cache *s,
 
 static noinline bool alloc_debug_processing(struct kmem_cache *s,
 			struct slab *slab, void *object, int orig_size)
-{
+{ // Aux:
 	if (s->flags & SLAB_CONSISTENCY_CHECKS) {
 		if (!alloc_consistency_checks(s, slab, object))
 			goto bad;
@@ -1616,7 +1616,7 @@ bad:
 
 static inline int free_consistency_checks(struct kmem_cache *s,
 		struct slab *slab, void *object, unsigned long addr)
-{
+{ // Aux:
 	if (!check_valid_pointer(s, slab, object)) {
 		slab_err(s, slab, "Invalid object pointer 0x%p", object);
 		return 0;
@@ -1658,7 +1658,7 @@ static inline int free_consistency_checks(struct kmem_cache *s,
  */
 static char *
 parse_slub_debug_flags(char *str, slab_flags_t *flags, char **slabs, bool init)
-{
+{ // Aux:
 	bool higher_order_disable = false;
 
 	/* Skip any completely empty blocks */
@@ -1735,7 +1735,7 @@ check_slabs:
 }
 
 static int __init setup_slub_debug(char *str)
-{
+{ // Aux:
 	slab_flags_t flags;
 	slab_flags_t global_flags;
 	char *saved_str;
@@ -1805,7 +1805,7 @@ __setup_param("slub_debug", slub_debug, setup_slub_debug, 0);
  * then only the select slabs will receive the debug option(s).
  */
 slab_flags_t kmem_cache_flags(slab_flags_t flags, const char *name)
-{
+{ // Aux:
 	char *iter;
 	size_t len;
 	char *next_block;
@@ -1898,7 +1898,7 @@ static inline void dec_slabs_node(struct kmem_cache *s, int node,
 #ifndef CONFIG_SLUB_TINY
 static bool freelist_corrupted(struct kmem_cache *s, struct slab *slab,
 			       void **freelist, void *nextfree)
-{
+{ // Aux:
 	return false;
 }
 #endif
@@ -1909,7 +1909,7 @@ static bool freelist_corrupted(struct kmem_cache *s, struct slab *slab,
 #ifdef CONFIG_MEM_ALLOC_PROFILING_DEBUG
 
 static inline void mark_objexts_empty(struct slabobj_ext *obj_exts)
-{
+{ // Aux:
 	struct slabobj_ext *slab_exts;
 	struct slab *obj_exts_slab;
 
@@ -1964,7 +1964,7 @@ static inline void handle_failed_objexts_alloc(unsigned long obj_exts,
 
 int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
 		        gfp_t gfp, bool new_slab)
-{
+{ // Main:
 	unsigned int objects = objs_per_slab(s, slab);
 	unsigned long new_exts;
 	unsigned long old_exts;
@@ -2013,7 +2013,7 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
 }
 
 static inline void free_slab_obj_exts(struct slab *slab)
-{
+{ // Aux:
 	struct slabobj_ext *obj_exts;
 
 	obj_exts = slab_obj_exts(slab);
@@ -2028,12 +2028,12 @@ static inline void free_slab_obj_exts(struct slab *slab)
 	 * the extension for obj_exts is expected to be NULL.
 	 */
 	mark_objexts_empty(obj_exts);
-	kfree(obj_exts);
+	kfree(obj_exts); // Drill:
 	slab->obj_exts = 0;
 }
 
 static inline bool need_slab_obj_ext(void)
-{
+{ // Aux:
 	if (mem_alloc_profiling_enabled())
 		return true;
 
@@ -2048,7 +2048,7 @@ static inline bool need_slab_obj_ext(void)
 
 static int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
 			       gfp_t gfp, bool new_slab)
-{
+{ // Aux:
 	return 0;
 }
 
@@ -2067,7 +2067,7 @@ static inline bool need_slab_obj_ext(void)
 
 static inline struct slabobj_ext *
 prepare_slab_obj_exts_hook(struct kmem_cache *s, gfp_t flags, void *p)
-{
+{ // Aux:
 	struct slab *slab;
 
 	if (!p)
@@ -2091,7 +2091,7 @@ prepare_slab_obj_exts_hook(struct kmem_cache *s, gfp_t flags, void *p)
 
 static inline void
 alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags)
-{
+{ // Wrap:
 	if (need_slab_obj_ext()) {
 		struct slabobj_ext *obj_exts;
 
@@ -2109,7 +2109,7 @@ alloc_tagging_slab_alloc_hook(struct kmem_cache *s, void *object, gfp_t flags)
 static inline void
 alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
 			     int objects)
-{
+{ // Wrap:
 	struct slabobj_ext *obj_exts;
 	int i;
 
@@ -2150,7 +2150,7 @@ static void memcg_alloc_abort_single(struct kmem_cache *s, void *object);
 static __fastpath_inline
 bool memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
 				gfp_t flags, size_t size, void **p)
-{
+{ // Aux:
 	if (likely(!memcg_kmem_online()))
 		return true;
 
@@ -2173,7 +2173,7 @@ bool memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
 static __fastpath_inline
 void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab, void **p,
 			  int objects)
-{
+{ // Aux:
 	struct slabobj_ext *obj_exts;
 
 	if (!memcg_kmem_online())
@@ -2209,7 +2209,7 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
  */
 static __always_inline
 bool slab_free_hook(struct kmem_cache *s, void *x, bool init)
-{
+{ // Worker:
 	kmemleak_free_recursive(x, s->flags);
 	kmsan_slab_free(s, x);
 
@@ -2255,7 +2255,7 @@ bool slab_free_hook(struct kmem_cache *s, void *x, bool init)
 static __fastpath_inline
 bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
 			     int *cnt)
-{
+{ // Worker:
 
 	void *object;
 	void *next = *head;
@@ -2273,7 +2273,7 @@ bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
 
 	init = slab_want_init_on_free(s);
 
-	do {
+	do { // Loop:
 		object = next;
 		next = get_freepointer(s, object);
 
@@ -2313,7 +2313,7 @@ static void *setup_object(struct kmem_cache *s, void *object)
  */
 static inline struct slab *alloc_slab_page(gfp_t flags, int node,
 		struct kmem_cache_order_objects oo)
-{
+{ // Worker:
 	struct folio *folio;
 	struct slab *slab;
 	unsigned int order = oo_order(oo);
@@ -2362,7 +2362,7 @@ static int init_cache_random_seq(struct kmem_cache *s)
 
 /* Initialize each random sequence freelist per cache */
 static void __init init_freelist_randomization(void)
-{
+{ // Aux:
 	struct kmem_cache *s;
 
 	mutex_lock(&slab_mutex);
@@ -2378,7 +2378,7 @@ static void *next_freelist_entry(struct kmem_cache *s,
 				unsigned long *pos, void *start,
 				unsigned long page_limit,
 				unsigned long freelist_count)
-{
+{ // Aux:
 	unsigned int idx;
 
 	/*
@@ -2397,7 +2397,7 @@ static void *next_freelist_entry(struct kmem_cache *s,
 
 /* Shuffle the single linked freelist based on a random pre-computed sequence */
 static bool shuffle_freelist(struct kmem_cache *s, struct slab *slab)
-{
+{ // Worker:
 	void *start;
 	void *cur;
 	void *next;
@@ -2461,7 +2461,7 @@ static __always_inline void unaccount_slab(struct slab *slab, int order,
 }
 
 static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
-{
+{ // Main:
 	struct slab *slab;
 	struct kmem_cache_order_objects oo = s->oo;
 	gfp_t alloc_gfp;
@@ -2528,7 +2528,7 @@ static struct slab *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 }
 
 static struct slab *new_slab(struct kmem_cache *s, gfp_t flags, int node)
-{
+{ // Wrap:
 	if (unlikely(flags & GFP_SLAB_BUG_MASK))
 		flags = kmalloc_fix_flags(flags);
 
@@ -2539,7 +2539,7 @@ static struct slab *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 }
 
 static void __free_slab(struct kmem_cache *s, struct slab *slab)
-{
+{ // Worker:
 	struct folio *folio = slab_folio(slab);
 	int order = folio_order(folio);
 	int pages = 1 << order;
@@ -2562,7 +2562,7 @@ static void rcu_free_slab(struct rcu_head *h)
 }
 
 static void free_slab(struct kmem_cache *s, struct slab *slab)
-{
+{ // Wrap: main
 	if (kmem_cache_debug_flags(s, SLAB_CONSISTENCY_CHECKS)) {
 		void *p;
 
@@ -2588,17 +2588,17 @@ static void discard_slab(struct kmem_cache *s, struct slab *slab)
  * the per-node partial list.
  */
 static inline bool slab_test_node_partial(const struct slab *slab)
-{
+{ // Aux:
 	return folio_test_workingset(slab_folio(slab));
 }
 
 static inline void slab_set_node_partial(struct slab *slab)
-{
+{ // Aux:
 	set_bit(PG_workingset, folio_flags(slab_folio(slab), 0));
 }
 
 static inline void slab_clear_node_partial(struct slab *slab)
-{
+{ // Aux:
 	clear_bit(PG_workingset, folio_flags(slab_folio(slab), 0));
 }
 
@@ -2607,7 +2607,7 @@ static inline void slab_clear_node_partial(struct slab *slab)
  */
 static inline void
 __add_partial(struct kmem_cache_node *n, struct slab *slab, int tail)
-{
+{ // Aux:
 	n->nr_partial++;
 	if (tail == DEACTIVATE_TO_TAIL)
 		list_add_tail(&slab->slab_list, &n->partial);
@@ -2618,14 +2618,14 @@ __add_partial(struct kmem_cache_node *n, struct slab *slab, int tail)
 
 static inline void add_partial(struct kmem_cache_node *n,
 				struct slab *slab, int tail)
-{
+{ // Wrapper:
 	lockdep_assert_held(&n->list_lock);
 	__add_partial(n, slab, tail);
 }
 
 static inline void remove_partial(struct kmem_cache_node *n,
 					struct slab *slab)
-{
+{ // Aux:
 	lockdep_assert_held(&n->list_lock);
 	list_del(&slab->slab_list);
 	slab_clear_node_partial(slab);
