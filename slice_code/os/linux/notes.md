@@ -25,6 +25,14 @@ We use comment tag to mark code block, in order to decrease next time's reading 
 // Sched: 调度点
 // Init: 变量初始化
 
+// Getter:
+// Setter:
+
+// Debug:
+
+// Atomic:
+// Trans: 结构体转换
+
 // Main:(High-Complexity) 主要工作例程
 // (Entrance) 主入口
 
@@ -33,8 +41,8 @@ We use comment tag to mark code block, in order to decrease next time's reading 
 // Aux: 辅助例程
 // Export: 外部例程
 // Worker: 普通工作例程
-// Wrapper: 上层包装例程
+// Wrap: 上层包装例程
 // Arbitor: 仲裁历程
-// Integrator: 上位统合例程
+// Integrate: 上位统合例程
 
 // (High-Complexity)

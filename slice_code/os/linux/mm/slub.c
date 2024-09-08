@@ -226,18 +226,18 @@ struct partial_context {
 };
 
 static inline bool kmem_cache_debug(struct kmem_cache *s)
-{
+{ // Wrap:
 	return kmem_cache_debug_flags(s, SLAB_DEBUG_FLAGS);
 }
 
 static inline bool slub_debug_orig_size(struct kmem_cache *s)
-{
+{ // Wrap:
 	return (kmem_cache_debug_flags(s, SLAB_STORE_USER) &&
 			(s->flags & SLAB_KMALLOC));
 }
 
 void *fixup_red_left(struct kmem_cache *s, void *p)
-{
+{ // Wrap:
 	if (kmem_cache_debug_flags(s, SLAB_RED_ZONE))
 		p += s->red_left_pad;
 
@@ -245,7 +245,7 @@ void *fixup_red_left(struct kmem_cache *s, void *p)
 }
 
 static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
-{
+{ // Wrap:
 #ifdef CONFIG_SLUB_CPU_PARTIAL
 	return !kmem_cache_debug(s);
 #else
@@ -422,7 +422,7 @@ void stat_add(const struct kmem_cache *s, enum stat_item si, int v)
 /*
  * The slab lists for all objects.
  */
-struct kmem_cache_node {
+struct kmem_cache_node { // Main:
 	spinlock_t list_lock;
 	unsigned long nr_partial;
 	struct list_head partial;
@@ -532,7 +532,7 @@ static void prefetch_freepointer(const struct kmem_cache *s, void *object)
  */
 __no_kmsan_checks
 static inline void *get_freepointer_safe(struct kmem_cache *s, void *object)
-{
+{ // Getter:
 	unsigned long freepointer_addr;
 	freeptr_t p;
 
@@ -546,7 +546,7 @@ static inline void *get_freepointer_safe(struct kmem_cache *s, void *object)
 }
 
 static inline void set_freepointer(struct kmem_cache *s, void *object, void *fp)
-{
+{ // Setter:
 	unsigned long freeptr_addr = (unsigned long)object + s->offset;
 
 #ifdef CONFIG_SLAB_FREELIST_HARDENED
@@ -570,7 +570,7 @@ static inline bool freeptr_outside_object(struct kmem_cache *s)
  * not overlapping with object.
  */
 static inline unsigned int get_info_end(struct kmem_cache *s)
-{
+{ // Getter:
 	if (freeptr_outside_object(s))
 		return s->inuse + sizeof(void *);
 	else
@@ -645,12 +645,12 @@ static inline unsigned int slub_get_cpu_partial(struct kmem_cache *s)
  * Per slab locking using the pagelock
  */
 static __always_inline void slab_lock(struct slab *slab)
-{
+{ // Wrap:
 	bit_spin_lock(PG_locked, &slab->__page_flags);
 }
 
 static __always_inline void slab_unlock(struct slab *slab)
-{
+{ // Wrap:
 	bit_spin_unlock(PG_locked, &slab->__page_flags);
 }
 
@@ -658,12 +658,12 @@ static inline bool
 __update_freelist_fast(struct slab *slab,
 		      void *freelist_old, unsigned long counters_old,
 		      void *freelist_new, unsigned long counters_new)
-{
+{ // Aux:
 #ifdef system_has_freelist_aba
 	freelist_aba_t old = { .freelist = freelist_old, .counter = counters_old };
 	freelist_aba_t new = { .freelist = freelist_new, .counter = counters_new };
 
-	return try_cmpxchg_freelist(&slab->freelist_counter.full, &old.full, new.full);
+	return try_cmpxchg_freelist(&slab->freelist_counter.full, &old.full, new.full); // Atomic:
 #else
 	return false;
 #endif
@@ -673,7 +673,7 @@ static inline bool
 __update_freelist_slow(struct slab *slab,
 		      void *freelist_old, unsigned long counters_old,
 		      void *freelist_new, unsigned long counters_new)
-{
+{ // Aux:
 	bool ret = false;
 
 	slab_lock(slab);
@@ -699,7 +699,7 @@ static inline bool __slab_update_freelist(struct kmem_cache *s, struct slab *sla
 		void *freelist_old, unsigned long counters_old,
 		void *freelist_new, unsigned long counters_new,
 		const char *n)
-{
+{ // Integrate:
 	bool ret;
 
 	if (USE_LOCKLESS_FAST_PATH())
@@ -729,7 +729,7 @@ static inline bool slab_update_freelist(struct kmem_cache *s, struct slab *slab,
 		void *freelist_old, unsigned long counters_old,
 		void *freelist_new, unsigned long counters_new,
 		const char *n)
-{
+{ // Wrap:
 	bool ret;
 
 	if (s->flags & __CMPXCHG_DOUBLE) {
@@ -762,7 +762,7 @@ static DEFINE_SPINLOCK(object_map_lock);
 
 static void __fill_map(unsigned long *obj_map, struct kmem_cache *s,
 		       struct slab *slab)
-{
+{ // Aux:
 	void *addr = slab_address(slab);
 	void *p;
 
@@ -809,7 +809,7 @@ static inline bool slab_in_kunit_test(void) { return false; }
 #endif
 
 static inline unsigned int size_from_object(struct kmem_cache *s)
-{
+{ // Trans:
 	if (s->flags & SLAB_RED_ZONE)
 		return s->size - s->red_left_pad;
 
@@ -940,7 +940,7 @@ static __always_inline void set_track(struct kmem_cache *s, void *object,
 }
 
 static void init_tracking(struct kmem_cache *s, void *object)
-{
+{ // Aux:
 	struct track *p;
 
 	if (!(s->flags & SLAB_STORE_USER))
@@ -951,7 +951,7 @@ static void init_tracking(struct kmem_cache *s, void *object)
 }
 
 static void print_track(const char *s, struct track *t, unsigned long pr_time)
-{
+{ // Aux:
 	depot_stack_handle_t handle __maybe_unused;
 
 	if (!t->addr)
@@ -969,7 +969,7 @@ static void print_track(const char *s, struct track *t, unsigned long pr_time)
 }
 
 void print_tracking(struct kmem_cache *s, void *object)
-{
+{ // Aux:
 	unsigned long pr_time = jiffies;
 	if (!(s->flags & SLAB_STORE_USER))
 		return;
@@ -979,7 +979,7 @@ void print_tracking(struct kmem_cache *s, void *object)
 }
 
 static void print_slab_info(const struct slab *slab)
-{
+{ // Aux:
 	pr_err("Slab 0x%p objects=%u used=%u fp=0x%p flags=%pGp\n",
 	       slab, slab->objects, slab->inuse, slab->freelist,
 	       &slab->__page_flags);
@@ -993,7 +993,7 @@ static void print_slab_info(const struct slab *slab)
  */
 static inline void set_orig_size(struct kmem_cache *s,
 				void *object, unsigned int orig_size)
-{
+{ // Setter:
 	void *p = kasan_reset_tag(object);
 	unsigned int kasan_meta_size;
 
@@ -1017,7 +1017,7 @@ static inline void set_orig_size(struct kmem_cache *s,
 }
 
 static inline unsigned int get_orig_size(struct kmem_cache *s, void *object)
-{
+{ // Getter:
 	void *p = kasan_reset_tag(object);
 
 	if (!slub_debug_orig_size(s))
@@ -1035,7 +1035,7 @@ void skip_orig_size_check(struct kmem_cache *s, const void *object)
 }
 
 static void slab_bug(struct kmem_cache *s, char *fmt, ...)
-{
+{ // Aux:
 	struct va_format vaf;
 	va_list args;
 
@@ -1050,7 +1050,7 @@ static void slab_bug(struct kmem_cache *s, char *fmt, ...)
 
 __printf(2, 3)
 static void slab_fix(struct kmem_cache *s, char *fmt, ...)
-{
+{ // Aux:
 	struct va_format vaf;
 	va_list args;
 
@@ -1065,7 +1065,7 @@ static void slab_fix(struct kmem_cache *s, char *fmt, ...)
 }
 
 static void print_trailer(struct kmem_cache *s, struct slab *slab, u8 *p)
-{
+{ // Aux:
 	unsigned int off;	/* Offset of last byte */
 	u8 *addr = slab_address(slab);
 
@@ -1108,7 +1108,7 @@ static void print_trailer(struct kmem_cache *s, struct slab *slab, u8 *p)
 
 static void object_err(struct kmem_cache *s, struct slab *slab,
 			u8 *object, char *reason)
-{
+{ // Aux:
 	if (slab_add_kunit_errors())
 		return;
 
@@ -1119,7 +1119,7 @@ static void object_err(struct kmem_cache *s, struct slab *slab,
 
 static bool freelist_corrupted(struct kmem_cache *s, struct slab *slab,
 			       void **freelist, void *nextfree)
-{
+{ // Aux:
 	if ((s->flags & SLAB_CONSISTENCY_CHECKS) &&
 	    !check_valid_pointer(s, slab, nextfree) && freelist) {
 		object_err(s, slab, *freelist, "Freechain corrupt");
@@ -1133,7 +1133,7 @@ static bool freelist_corrupted(struct kmem_cache *s, struct slab *slab,
 
 static __printf(3, 4) void slab_err(struct kmem_cache *s, struct slab *slab,
 			const char *fmt, ...)
-{
+{ // Aux:
 	va_list args;
 	char buf[100];
 
@@ -1150,7 +1150,7 @@ static __printf(3, 4) void slab_err(struct kmem_cache *s, struct slab *slab,
 }
 
 static void init_object(struct kmem_cache *s, void *object, u8 val)
-{
+{ // Aux:
 	u8 *p = kasan_reset_tag(object);
 	unsigned int poison_size = s->object_size;
 
@@ -1185,7 +1185,7 @@ static void init_object(struct kmem_cache *s, void *object, u8 val)
 
 static void restore_bytes(struct kmem_cache *s, char *message, u8 data,
 						void *from, void *to)
-{
+{ // Aux:
 	slab_fix(s, "Restoring %s 0x%p-0x%p=0x%x", message, from, to - 1, data);
 	memset(from, data, to - from);
 }
@@ -1200,7 +1200,7 @@ static pad_check_attributes int
 check_bytes_and_report(struct kmem_cache *s, struct slab *slab,
 		       u8 *object, char *what,
 		       u8 *start, unsigned int value, unsigned int bytes)
-{
+{ // Aux:
 	u8 *fault;
 	u8 *end;
 	u8 *addr = slab_address(slab);
@@ -1268,7 +1268,7 @@ skip_bug_print:
  */
 
 static int check_pad_bytes(struct kmem_cache *s, struct slab *slab, u8 *p)
-{
+{ // Aux:
 	unsigned long off = get_info_end(s);	/* The end of info */
 
 	if (s->flags & SLAB_STORE_USER) {
@@ -1291,7 +1291,7 @@ static int check_pad_bytes(struct kmem_cache *s, struct slab *slab, u8 *p)
 /* Check the pad bytes at the end of a slab page */
 static pad_check_attributes void
 slab_pad_check(struct kmem_cache *s, struct slab *slab)
-{
+{ // Debug:
 	u8 *start;
 	u8 *fault;
 	u8 *end;
@@ -1327,7 +1327,7 @@ slab_pad_check(struct kmem_cache *s, struct slab *slab)
 
 static int check_object(struct kmem_cache *s, struct slab *slab,
 					void *object, u8 val)
-{
+{ // Debug:
 	u8 *p = object;
 	u8 *endobject = object + s->object_size;
 	unsigned int orig_size, kasan_meta_size;
@@ -1411,7 +1411,7 @@ static int check_object(struct kmem_cache *s, struct slab *slab,
 }
 
 static int check_slab(struct kmem_cache *s, struct slab *slab)
-{
+{ // Debug:
 	int maxobj;
 
 	if (!folio_test_slab(slab_folio(slab))) {
@@ -1440,7 +1440,7 @@ static int check_slab(struct kmem_cache *s, struct slab *slab)
  * slab lock to guarantee that the chains are in a consistent state.
  */
 static int on_freelist(struct kmem_cache *s, struct slab *slab, void *search)
-{
+{ // Aux:
 	int nr = 0;
 	void *fp;
 	void *object = NULL;
@@ -1490,7 +1490,7 @@ static int on_freelist(struct kmem_cache *s, struct slab *slab, void *search)
 
 static void trace(struct kmem_cache *s, struct slab *slab, void *object,
 								int alloc)
-{
+{ // Debug:
 	if (s->flags & SLAB_TRACE) {
 		pr_info("TRACE %s %s 0x%p inuse=%d fp=0x%p\n",
 			s->name,
@@ -1511,7 +1511,7 @@ static void trace(struct kmem_cache *s, struct slab *slab, void *object,
  */
 static void add_full(struct kmem_cache *s,
 	struct kmem_cache_node *n, struct slab *slab)
-{
+{ // Aux:
 	if (!(s->flags & SLAB_STORE_USER))
 		return;
 
@@ -1520,7 +1520,7 @@ static void add_full(struct kmem_cache *s,
 }
 
 static void remove_full(struct kmem_cache *s, struct kmem_cache_node *n, struct slab *slab)
-{
+{ // Aux:
 	if (!(s->flags & SLAB_STORE_USER))
 		return;
 
@@ -1529,12 +1529,12 @@ static void remove_full(struct kmem_cache *s, struct kmem_cache_node *n, struct 
 }
 
 static inline unsigned long node_nr_slabs(struct kmem_cache_node *n)
-{
+{ // Aux:
 	return atomic_long_read(&n->nr_slabs);
 }
 
 static inline void inc_slabs_node(struct kmem_cache *s, int node, int objects)
-{
+{ // Aux:
 	struct kmem_cache_node *n = get_node(s, node);
 
 	atomic_long_inc(&n->nr_slabs);

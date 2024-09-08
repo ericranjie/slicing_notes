@@ -2645,13 +2645,13 @@ bool __mpol_equal(struct mempolicy *a, struct mempolicy *b)
  */
 static struct sp_node *sp_lookup(struct shared_policy *sp,
 					pgoff_t start, pgoff_t end)
-{
+{ // Aux:
 	struct rb_node *n = sp->root.rb_node;
 
-	while (n) {
+	while (n) { // Loop:
 		struct sp_node *p = rb_entry(n, struct sp_node, nd);
 
-		if (start >= p->end)
+		if (start >= p->end) // Algo:
 			n = n->rb_right;
 		else if (end <= p->start)
 			n = n->rb_left;
@@ -2678,7 +2678,7 @@ static struct sp_node *sp_lookup(struct shared_policy *sp,
  * writing.
  */
 static void sp_insert(struct shared_policy *sp, struct sp_node *new)
-{
+{ // Aux:
 	struct rb_node **p = &sp->root.rb_node;
 	struct rb_node *parent = NULL;
 	struct sp_node *nd;
