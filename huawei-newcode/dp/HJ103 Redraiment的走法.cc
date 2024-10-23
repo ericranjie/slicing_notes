@@ -3,6 +3,7 @@
 using namespace std;
 
 // longest-increasing-subsequence:
+// resite:
 int main() {
     int n;
     vector<int> v;
@@ -14,9 +15,23 @@ int main() {
         // cout << t;
     }
 
-    vector<vector<int>> dp(n, vector<int>(n, 0));
+    vector<int> dp(n, 1);
+    int mx = 0;
+    for (int i = 0; i < v.size(); i++) {
+        for (int j = i; j >= 0; j--) { // stuck-point:
+            if (v[j] < v[i]) {
+                dp[i] = max(dp[i], dp[j] + 1);
+                mx = max(mx, dp[i]);
+            }
+        }
+    }
+
+    cout << mx;
+    return 0;
+
+    // vector<vector<int>> dp(n, vector<int>(n, 0));
     // dp[0][0] = 1;
-    int r = 0;
+
     // for (int i = 0; i < n; i++) {
     //     dp[i][j]
     // }
@@ -35,15 +50,12 @@ int main() {
     //     }
     // }
 
-    int i = 0, j = 1, s = 1;
-    while (s < n) {
-        i = 0; j = i + s;
-        for (int k = i; k < j; k++) {
-            dp[i][j] = max(dp[i][j], dp[i][k] + dp[k][j]);
-        }
-    }
-
-    cout << r;
-    return 0;
+    // int i = 0, j = 1, s = 1;
+    // while (s < n) {
+    //     i = 0; j = i + s;
+    //     for (int k = i; k < j; k++) {
+    //         dp[i][j] = max(dp[i][j], dp[i][k] + dp[k][j]);
+    //     }
+    // }
 }
 // 64 位输出请用 printf("%lld")
