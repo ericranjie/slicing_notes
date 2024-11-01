@@ -45,9 +45,8 @@ int main() {
     string t;
     getline(cin, t);
 
-    stack<char> bst; // bracket-stack
-    stack<int> nst; // number-stack
     stack<char> ost; // operator-stack
+    stack<int> nst; // number-stack
 
     bool m = false; // minus-flag
     for (int i = 0; i < t.size(); i++) {
@@ -58,58 +57,14 @@ int main() {
             }
             nst.push(n);
             m = false;
-        } else if (is_operator(t[i])) { // operator
-            if ((t[i] == '-') && i - 1 >= 0 &&
-                is_lbracket(t[i - 1])) {
-                m = true;
-                continue; // jump
-            }
-            if (((t[i] == '*') || (t[i] == '/')) &&
-                    i + 1 < t.size() &&
-                    (t[i + 1] != '{') &&
-                    (t[i + 1] != '(') &&
-                    (t[i + 1] != '[')) {
-                char o = t[i];
-                int a = nst.top();
-                nst.pop();
-                int b = t[i + 1];
-                int r = comp(a, b, o);
-                nst.push(r);
-                m = false;
-                ++i;
-                continue;
-            }
-            ost.push(t[i]);
-            m = false;
-        } else if (is_lbracket(t[i])) { // left-bracket
-            bst.push(t[i]);
-            m = false;
-        } else if (is_rbracket(t[i])) { // right-bracket
-            bst.pop();
-            char o = ost.top();
-            ost.pop();
-            int a = nst.top();
-            nst.pop();
-            int b = nst.top();
-            nst.pop();
-            int r = comp(a, b, o);
-            nst.push(r);
-            m = false;
         }
+    } else if (is_operator(t[i])// operator
+        is_lbracket(t[i])) { // left-bracket
+        ost.push(t[i]);
+    } else if (is_rbracket(t[i])) { // right-bracket
+        
+        continue;
     }
-
-    while (ost.size() > 0) {
-        char o = ost.top();
-        ost.pop();
-        int a = nst.top();
-        nst.pop();
-        int b = nst.top();
-        nst.pop();
-        int r = comp(a, b, o);
-        nst.push(r);
-    }
-
-    cout << nst.top();
 
     return 0;
 }
