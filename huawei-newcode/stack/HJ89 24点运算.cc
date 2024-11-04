@@ -1,16 +1,38 @@
+
 #include <iostream>
 #include <vector>
 using namespace std;
 
-int recur(vector<double> &t, double eps, vector<string> &res) {
 
+// Deprecated: This solution is bracket-correct.
+#if 0
+// If mixed +- and */, and first is +or-,
+// then only allow (+or-) appear once.
+// Same, if first is *or/, then last two must be +or-
+int recur(vector<double> &t, double eps,
+    vector<string> &res, vector<char> &ops, vector<vector<char>> &opres) {
+    // cout << t.size() << " " << t[0] << endl;
+    if (res.size() == 1) { // success:already-has-result
+        return 0;
+    } else if (t.size() == 1 && t[0] == 24) {
+        // cout << "s" << endl;
+        for (auto o : ops) {
+            cout << o << " ";
+        }
+        cout << endl;
+        opres.push_back(ops);
+        return 0;
+    } else if (t.size() == 1 && t[0] != 24) { // failed
+        return 0;
+    }
 
     for (int i = 0; i < t.size(); i++) {
-        for (int j = i; j < t.size(); j++) {
+        for (int j = 0; j < i; j++) { // POE:segment-fault
             double a = t[i];
             double b = t[j];
 
             vector<double> o{a + b, a - b, b - a, a * b};
+            vector<char> vc{'+', '-', '-', '*', '/'};
             if (a > eps) {
                 o.push_back(b / a);
             }
@@ -21,17 +43,20 @@ int recur(vector<double> &t, double eps, vector<string> &res) {
             t.erase(t.begin() + i);
             t.erase(t.begin() + j);
 
-            for (double d : o) {
-                t.push_back(d);
-                recur(t, eps, res);
+            for (int k = 0; k < o.size(); k++) {
+                t.push_back(o[k]);
+                ops.push_back(vc[k]);
+                recur(t, eps, res, ops, opres);
+                ops.pop_back();
                 t.pop_back();
             }
 
-            t.insert(t.begin() + i, a);
             t.insert(t.begin() + j, b);
+            t.insert(t.begin() + i, a);
         }
     }
 
+    // cout << "return" << endl;
     return 0;
 }
 
@@ -84,8 +109,13 @@ int main() {
     vector<string> res;
     double eps = 0.001;
     vector<double> d(a.begin(), a.end());
-    recur(d, eps, res);
+    vector<char> ops;
+    vector<vector<char>> opres;
+    recur(d, eps, res, ops, opres);
+
+    cout << opres.size() << endl;
 
     return 0;
 }
 // 64 位输出请用 printf("%lld")
+#endif
