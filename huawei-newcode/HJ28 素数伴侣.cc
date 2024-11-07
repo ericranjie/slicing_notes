@@ -3,6 +3,7 @@
 using namespace std;
 
 // TLE-Solution:no-memo-and-memo 22/24
+// abandon: or-optimize-or-find-new-solution
 bool is_prime(int p);
 bool find(int oi, vector<int> &even, vector<bool> visit,
     vector<int> &match, vector<vector<bool>> &memo);
