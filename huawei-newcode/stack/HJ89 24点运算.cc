@@ -1,11 +1,9 @@
-
 #include <iostream>
 #include <vector>
 using namespace std;
 
+// abandon: or-find-solution
 
-// Deprecated: This solution is bracket-correct.
-#if 0
 // If mixed +- and */, and first is +or-,
 // then only allow (+or-) appear once.
 // Same, if first is *or/, then last two must be +or-
@@ -118,4 +116,3 @@ int main() {
     return 0;
 }
 // 64 位输出请用 printf("%lld")
-#endif
