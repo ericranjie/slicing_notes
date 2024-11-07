@@ -2,6 +2,7 @@
 using namespace std;
 
 // recite:special
+// abandon:multiple-correct-answer
 // b = a * p + r
 // a / b =
 //  a / a * p + r =
