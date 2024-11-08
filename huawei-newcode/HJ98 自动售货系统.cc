@@ -1,0 +1,163 @@
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+
+class VendingMachine {
+  public:
+    VendingMachine(string t);
+    void Pay(string t);
+    void Buy(string t);
+    void CoinReturn(string t);
+    void Query(string t);
+    vector<string> goodname_;
+    vector<int> goodprice_;
+    vector<int> goodnum_;
+    vector<int> cashnum_; // 1-2-5-10
+};
+
+VendingMachine::VendingMachine(string t) {
+    goodname_.push_back("A1"); goodprice_.push_back(2);
+    goodname_.push_back("A2"); goodprice_.push_back(3);
+    goodname_.push_back("A3"); goodprice_.push_back(4);
+    goodname_.push_back("A4"); goodprice_.push_back(5);
+    goodname_.push_back("A5"); goodprice_.push_back(8);
+    goodname_.push_back("A6"); goodprice_.push_back(6);
+
+    int s1 = 1, s2 = 0; // space1-2
+    for (int i = 2; i < t.size(); i++) {
+        if (t[i] == ' ') {
+            s2 = i;
+        }
+    }
+    string g = t.substr(s1 + 1, s2 - s1 - 1); // POE: goodcmd
+    string c = t.substr(s2 + 1); // cashcmd
+
+    int n = 0;
+    int j = 0;
+    for (int i = 0; i < g.size(); i++) {
+        if (g[i] != '-') {
+            n *= 10;
+            n += g[i] - '0';
+        } else {
+            goodnum_.push_back(n);
+            n = 0; // reset
+        }
+    }
+    goodnum_.push_back(n); // POE:
+
+    j = 0;
+    n = 0;
+    for (int i = 0; i < c.size(); i++) {
+        if (c[i] != '-') {
+            n *= 10;
+            n += c[i] - '0';
+        } else {
+            cashnum_.push_back(n);
+            n = 0; // reset
+        }
+    }
+    cashnum_.push_back(n); // POE:
+}
+
+void VendingMachine::Pay(string t) {
+    // guard-1: empty-goods
+    bool empty = true;
+    for (int i = 0 ; i < goodnum_.size(); i++) {
+        if (goodnum_[i] > 0) {
+            empty = false;
+            break;
+        }
+    }
+    if (empty) {
+        cout << "E005:All the goods sold out" << endl;
+        return;
+    }
+
+    int n = 0;
+    for (int i = 2; i < t.size(); i++) { // POE:2
+        n *= 10;
+        n += t[i] - '0';
+    }
+    // guard-2: invalid-pay-coin
+    if (n != 1 && n != 2 && n != 5 && n != 10) {
+        cout << "E002:Denomination error" << endl;
+        return;
+    }
+
+    // guard-3: low-cash
+    int lowcash = cashnum_[0] + cashnum_[1] * 2;
+    if (n != 1 && n != 2 && lowcash < n) {
+        cout << "E003:Change is not enough, pay fail" << endl;
+        return;
+    }
+
+    if (n == 1) cashnum_[0]++;
+    else if (n == 2) cashnum_[1]++;
+    else if (n == 5) cashnum_[2]++;
+    else if (n == 10) cashnum_[3]++; 
+    cout << "S002:Pay success,balance=" << n << endl;
+    return;
+}
+
+void VendingMachine::Buy(string t) {
+    string good = t.substr(2);
+    // guard-1: invalid-good-name
+    bool valid = false;
+    int goodidx = 0;
+    for (int i = 0; i < goodname_.size(); i++) {
+        if (good == goodname_[i]) {
+            valid = true;
+            goodidx = i;
+            break;
+        }
+    }
+    if (!valid) {
+        cout << "E006:Goods does not exist" << endl;
+        return;
+    }
+
+    // guard-2: empty-goods
+    if (goodnum_[goodidx] <= 0) {
+        cout << "E007:The goods sold out" << endl;
+        return;
+    }
+
+    // guard-3: lack-cash
+    int remaincash = cashnum_[0] + cashnum_[1] * 2 +
+        cashnum_[2] * 5 + cashnum_[3] * 10;
+    if (remaincash < goodprice_[goodidx]) {
+        cout << "E008:Lack of balance" << endl;
+        return;
+    }
+
+    cout << "S003:Buy success,balance=" << endl;
+    return;
+}
+
+void VendingMachine::CoinReturn(string t) {
+    // guard-1: zero-remain-cash
+    int remaincash = cashnum_[0] + cashnum_[1] * 2 +
+        cashnum_[2] * 5 + cashnum_[3] * 10;
+    if (remaincash == 0) {
+        cout << "E009:Work failure" << endl;
+        return;
+    }
+
+    return;
+}
+
+void VendingMachine::Query(string t) {
+    return;
+}
+
+
+int main() {
+    string t;
+    getline(cin, t);
+
+    // VendingMachine vm("r 22-18-21-21-7-20 3-23-10-6");
+
+    return 0;
+}
+// 64 位输出请用 printf("%lld")w
