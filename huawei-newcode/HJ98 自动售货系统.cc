@@ -14,9 +14,11 @@ class VendingMachine {
     vector<int> goodprice_;
     vector<int> goodnum_;
     vector<int> cashnum_; // 1-2-5-10
+    int remain_;
 };
 
 VendingMachine::VendingMachine(string t) {
+    remain_ = 0;
     goodname_.push_back("A1"); goodprice_.push_back(2);
     goodname_.push_back("A2"); goodprice_.push_back(3);
     goodname_.push_back("A3"); goodprice_.push_back(4);
@@ -92,6 +94,8 @@ void VendingMachine::Pay(string t) {
         return;
     }
 
+    // success:
+    remain_ += n;
     if (n == 1) cashnum_[0]++;
     else if (n == 2) cashnum_[1]++;
     else if (n == 5) cashnum_[2]++;
@@ -131,6 +135,8 @@ void VendingMachine::Buy(string t) {
         return;
     }
 
+    // success:
+    remain_ -= goodprice_[goodidx];
     cout << "S003:Buy success,balance=" << endl;
     return;
 }
@@ -144,6 +150,32 @@ void VendingMachine::CoinReturn(string t) {
         return;
     }
 
+    // success: greedy-algorithm
+    int n1 = 0, n2 = 0, n5 = 0, n10 = 0;
+    while (remain_ > 0) {
+        if (remain_ >= 10 && cashnum_[3] > 0) {
+            remain_ -= 10;
+            cashnum_[3]--;
+            n10++;
+        } else if (remain_ >= 5 && cashnum_[2] > 0) {
+            remain_ -= 5;
+            cashnum_[2]--;
+            n5++;
+        } else if (remain_ >= 2 && cashnum_[1] > 0) {
+            remain_ -= 2;
+            cashnum_[1]--;
+            n2++;
+        } else if (remain_ >= 1 && cashnum_[0] > 0) {
+            remain_ -= 1;
+            cashnum_[0]--;
+            n1++;
+        }
+    }
+
+    cout << "1 yuan coin number=" << n1 << endl;
+    cout << "2 yuan coin number=" << n2 << endl;
+    cout << "5 yuan coin number=" << n5 << endl;
+    cout << "10 yuan coin number=" << n10 << endl;
     return;
 }
 
@@ -160,4 +192,4 @@ int main() {
 
     return 0;
 }
-// 64 位输出请用 printf("%lld")w
+// 64 位输出请用 printf("%lld")
