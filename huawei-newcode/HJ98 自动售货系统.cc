@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 class VendingMachine {
@@ -43,10 +44,12 @@ VendingMachine::VendingMachine(string t) {
             n += g[i] - '0';
         } else {
             goodnum_.push_back(n);
+            // cout << n << endl;
             n = 0; // reset
         }
     }
     goodnum_.push_back(n); // POE:
+    // cout << n << endl;
 
     j = 0;
     n = 0;
@@ -56,10 +59,13 @@ VendingMachine::VendingMachine(string t) {
             n += c[i] - '0';
         } else {
             cashnum_.push_back(n);
+            // cout << n << endl;
             n = 0; // reset
         }
     }
     cashnum_.push_back(n); // POE:
+    // cout << n << endl;
+    cout << "S001:Initialization is successful" << endl;
 }
 
 void VendingMachine::Pay(string t) {
@@ -100,7 +106,7 @@ void VendingMachine::Pay(string t) {
     else if (n == 2) cashnum_[1]++;
     else if (n == 5) cashnum_[2]++;
     else if (n == 10) cashnum_[3]++; 
-    cout << "S002:Pay success,balance=" << n << endl;
+    cout << "S002:Pay success,balance=" << remain_ << endl;
     return;
 }
 
@@ -128,24 +134,25 @@ void VendingMachine::Buy(string t) {
     }
 
     // guard-3: lack-cash
-    int remaincash = cashnum_[0] + cashnum_[1] * 2 +
-        cashnum_[2] * 5 + cashnum_[3] * 10;
-    if (remaincash < goodprice_[goodidx]) {
+    // int remaincash = cashnum_[0] + cashnum_[1] * 2 +
+    //     cashnum_[2] * 5 + cashnum_[3] * 10;
+    if (remain_ < goodprice_[goodidx]) {
         cout << "E008:Lack of balance" << endl;
         return;
     }
 
     // success:
     remain_ -= goodprice_[goodidx];
-    cout << "S003:Buy success,balance=" << endl;
+    cout << "S003:Buy success,balance=" << remain_ << endl;
     return;
 }
 
 void VendingMachine::CoinReturn(string t) {
     // guard-1: zero-remain-cash
-    int remaincash = cashnum_[0] + cashnum_[1] * 2 +
-        cashnum_[2] * 5 + cashnum_[3] * 10;
-    if (remaincash == 0) {
+    // int remaincash = cashnum_[0] + cashnum_[1] * 2 +
+    //     cashnum_[2] * 5 + cashnum_[3] * 10;
+    // cout << remaincash << endl;
+    if (remain_ == 0) {
         cout << "E009:Work failure" << endl;
         return;
     }
@@ -180,16 +187,85 @@ void VendingMachine::CoinReturn(string t) {
 }
 
 void VendingMachine::Query(string t) {
+    if (t.size() != 3 || (t.size() == 3 && 
+        (t[2] - '0' != 0 && t[2] - '0' != 1))) {
+        cout << "E010:Parameter error" << endl;
+        return;
+    }
+    int category = t[2] - '0';
+    if (category == 0) { // query: goodbox
+        int mx = 0;
+        int mxi = 0;
+        vector<int> v = goodnum_;
+        for (int i = 0; i < 6; i++) {
+            for (int j = 5; j >= 0; j--) {
+                if (v[j] == -1) {
+                    continue;
+                }
+                if (mx <= v[j]) {
+                    mxi = j;
+                    mx = v[j];
+                }
+            }
+            cout << goodname_[mxi] << " " <<
+                goodprice_[mxi] << " " <<
+                goodnum_[mxi] << endl;
+            v[mxi] = -1; // mark-visited
+            mx = 0; // reset
+        }
+    } else if (category == 1) { // query: cashbox
+        cout << "1 yuan coin number=" << cashnum_[0] << endl;
+        cout << "2 yuan coin number=" << cashnum_[1] << endl;
+        cout << "5 yuan coin number=" << cashnum_[2] << endl;
+        cout << "10 yuan coin number=" << cashnum_[3] << endl;
+    }
     return;
 }
-
 
 int main() {
     string t;
     getline(cin, t);
 
-    // VendingMachine vm("r 22-18-21-21-7-20 3-23-10-6");
+    int s = 0; // space-index
+    int p = 0; // prev-index
+    vector<string> cmd;
+    for (int i = 0; i < t.size(); i++) {
+        if (t[i] == ';') {
+            s = i;
+            cmd.push_back(t.substr(p, s - p));
+            p = i + 1;
+            ++i;
+        }
+    }
+    cmd.push_back(t.substr(p, t.size() - p));
+
+    VendingMachine vm(cmd[0]);
+    for (int i = 1; i < cmd.size(); i++) {
+        string c = cmd[i];
+        if (c[0] == 'q') {
+            // cout << c;
+            vm.Query(c);
+        } else if (c[0] == 'c') {
+            vm.CoinReturn(c);
+        } else if (c[0] == 'b') {
+            vm.Buy(c);
+        } else if (c[0] == 'p') {
+            vm.Pay(c);
+        }
+    }
 
     return 0;
 }
+// r 18-4-16-3-7-26 11-1-11-4;q1;c;c;q1;p 1;c;p 1;p 10;
+// S001:Initialization is successful
+// E010:Parameter error
+// E009:Work failure
+// E009:Work failure
+// E010:Parameter error
+// S002:Pay success,balance=1
+// 1 yuan coin number=1
+// 2 yuan coin number=0
+// 5 yuan coin number=0
+// 10 yuan coin number=0
+// S002:Pay success,balance=1
 // 64 位输出请用 printf("%lld")
