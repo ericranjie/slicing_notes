@@ -5,6 +5,8 @@
 #include <unordered_map>
 using namespace std;
 
+// recite:
+
 // Card to number;
 unordered_map<string, int> c2n = {
     {"A", 1}, {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, 
@@ -42,7 +44,7 @@ bool cal24(vector<int>& a, vector<int>& op) { //这个数字顺序和符号顺�
         return false;
 }
 
-bool check(vector<int>& nums){
+bool check(vector<int>& nums) {
     bool flag = false;
     vector<int> op(4);
     sort(nums.begin(), nums.end());
@@ -57,7 +59,7 @@ bool check(vector<int>& nums){
                         for (int m = 0; m < 3; m++) {
                             cout << n2c[nums[m]] << Op[op[m]];
                         }
-                        cout <<  n2c[nums[3]]  << endl;
+                        cout << n2c[nums[3]] << endl;
                         flag = true; // 找到了，准备跳出所有循环
                     }
                 }
@@ -78,7 +80,7 @@ int main() {
         }
         nums[i] = c2n[s[i]]; // Char to number;
     }
-    if (!check(nums)) // Guard:
+    if (!check(nums)) // Main:
         cout << "NONE" << endl;
     return 0;
 }
