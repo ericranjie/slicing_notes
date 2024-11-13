@@ -20,68 +20,65 @@ int main() {
     int np = 0; // number of private;
     while (getline(cin, t)) {
         int len = t.length();
-        int tilde = t.find('~'); // ~
-        string strIp = t.substr(0,tilde);//存放单个字符串Ip地址部分//stringA.substr(int startIndex, int needLength)
-        string strMask = t.substr(tilde+1,len - tilde- 1 );//存放单个字符串子网掩码部分
+        int tilde = t.find('~'); // seperate: ~
+        string s_ip = t.substr(0, tilde);
+        string s_mk = t.substr(tilde + 1, len - tilde - 1);
 
-        // Step-1: Exclude 0.*.*.* and 127.*.*.*;
-        int ipPoint1 = strIp.find('.');
-        string ip1 = strIp.substr(0, ipPoint1);
-        if (ip1 == "0" || ip1 == "127"){
+        // Step-1: Ignoring 0.*.*.* and 127.*.*.*;
+        int ip_p1 = s_ip.find('.');
+        string ip1 = s_ip.substr(0, ip_p1);
+        if (ip1 == "0" || ip1 == "127") {
             continue;
         }
         
-        //判断子网掩码是否正确
-        int maskPoint1 = strMask.find( '.' );//查找子网掩码中第1个点
-        string mask1 = strMask.substr(0 ,maskPoint1); 
-        if( mask1 == "" || stoi(mask1) > 255 ){ //不能为空位
+        // Step-2: Verifying mask;
+        int mk_p1 = s_mk.find('.');
+        string mk1 = s_mk.substr(0 ,mk_p1); 
+        if (mk1 == "" || stoi(mk1) > 255) {
             ni++;
             continue;
         }
-        bitset<8> bMask1(stoi(mask1)); //将字符串形式的数字转为整型后，获取其8位二进制值
+        bitset<8> bmk1(stoi(mk1)); // POK: int to bitset;
 
-        int maskPoint2 = strMask.find( '.' , maskPoint1 + 1);//从maskPoint1 + 1位置开始，查找子网掩码中第2个点
-        string mask2 = strMask.substr(maskPoint1 + 1 , maskPoint2 - maskPoint1 - 1 ); 
-        if( mask2 == "" || stoi(mask2) > 255 ){ //不能为空位
+        int mk_p2 = s_mk.find('.' , mk_p1 + 1);
+        string mk2 = s_mk.substr(mk_p1 + 1 , mk_p2 - mk_p1 - 1 ); 
+        if (mk2 == "" || stoi(mk2) > 255) {
             ni++;
             continue;
         }
-        bitset<8> bMask2(stoi(mask2));
+        bitset<8> bmk2(stoi(mk2));
         
-        int maskPoint3 = strMask.find( '.' ,maskPoint2 + 1);//查找子网掩码中第一个点
-        string mask3 = strMask.substr(maskPoint2 + 1, maskPoint3 - maskPoint2 -1 );
-        if( mask3 == "" || stoi(mask3) > 255 ){ //不能为空位
+        int mk_p3 = s_mk.find('.', mk_p2 + 1);
+        string mk3 = s_mk.substr(mk_p2 + 1, mk_p3 - mk_p2 -1 );
+        if (mk3 == "" || stoi(mk3) > 255) {
             ni++;
             continue;
         }
-        bitset<8> bMask3(stoi(mask3));
+        bitset<8> bmk3(stoi(mk3));
 
-        string mask4 = strMask.substr(maskPoint3+1 , strMask.length() - maskPoint3 -1 );
-        if( mask4 == "" || stoi(mask4) > 255 ){ //不能为空位
+        string mk4 = s_mk.substr(mk_p3 + 1, s_mk.length() - mk_p3 - 1);
+        if (mk4 == "" || stoi(mk4) > 255) {
             ni++;
             continue;
         }
-        bitset<8> bMask4(stoi(mask4));
+        bitset<8> bmk4(stoi(mk4));
         
         // Error-Mask: All zero or all one;
-        if(bMask1.count() + bMask2.count() + bMask3.count() + bMask4.count() == 32 ||
-          bMask1.count()+ bMask2.count() + bMask3.count() + bMask4.count() == 0){
+        if (bmk1.count() + bmk2.count() + bmk3.count() + bmk4.count() == 32 ||
+                bmk1.count() + bmk2.count() + bmk3.count() + bmk4.count() == 0) {
             ni++;
             continue;
         }
-        int vMask[32] = {0};//将二进制的子网掩码放入整型数组vMask，用于判断子网掩码中的连续1
-        for(int i = 0 ; i< 32 ;i++){
-            if(i>=0 && i<= 7){
-                vMask[i] = bMask1[7 - i];
-            }
-            else if(i>=8 && i<= 15){
-                vMask[i] = bMask2[ 7 - i + 8];
-            }
-            else if(i>=16 && i <= 23){
-                vMask[i] = bMask3[7 - i+ 16];
-            }
-            else if(i>=24 && i< 31){
-                vMask[i] = bMask4[7- i + 24];
+        int vMask[32] = {0};
+        for (int i = 0; i < 32; i++) {
+            if (i >= 0 && i <= 7) {
+                vMask[i] = bmk1[7 - i];
+            } else if (i >= 8 && i <= 15){
+                vMask[i] = bmk2[7 - i + 8];
+            } else if (i >= 16 && i <= 23){
+                vMask[i] = bmk3[7 - i + 16];
+            } else if (i >= 24 && i < 31) {
+                vMask[i] = bmk4[7 - i + 24];
             }
         }
         
@@ -105,20 +102,20 @@ int main() {
             continue;
         }
         
-        int ipPoint2 = strIp.find('.' , ipPoint1 +1 );
-        string ip2 = strIp.substr(ipPoint1 + 1, ipPoint2 - ipPoint1 - 1);
+        int ipPoint2 = s_ip.find('.' , ip_p1 +1 );
+        string ip2 = s_ip.substr(ip_p1 + 1, ipPoint2 - ip_p1 - 1);
         if(ip2 == "" || stoi(ip2) > 255){
             ni++;
             continue;
         }
-        int ipPoint3 = strIp.find('.' , ipPoint2 +1 );
-        string ip3 = strIp.substr(ipPoint2 + 1, ipPoint3 - ipPoint2 - 1);
+        int ipPoint3 = s_ip.find('.' , ipPoint2 +1 );
+        string ip3 = s_ip.substr(ipPoint2 + 1, ipPoint3 - ipPoint2 - 1);
         if(ip3 == "" || stoi(ip3) > 255){
             ni++;
             continue;
         }
         
-        string ip4 = strIp.substr(ipPoint3 + 1 , strIp.length() - ipPoint3 - 1);
+        string ip4 = s_ip.substr(ipPoint3 + 1 , s_ip.length() - ipPoint3 - 1);
         if(ip4 == "" || stoi(ip4) > 255){
             ni++;
             continue;
