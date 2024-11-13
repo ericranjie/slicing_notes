@@ -48,9 +48,7 @@ void solve(string t) {
 int main() {
     string t;
     while (getline(cin, t)) {
-        // cout << t << endl;
         solve(t);
     }
     return 0;
 }
-// 64 位输出请用 printf("%lld")
