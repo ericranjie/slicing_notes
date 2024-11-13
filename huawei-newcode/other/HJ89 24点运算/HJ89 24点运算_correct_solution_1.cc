@@ -47,18 +47,18 @@ bool check(vector<int>& nums){
     vector<int> op(4);
     sort(nums.begin(), nums.end());
     do {
-        for (int i = 0; i < 4 && !flag; i++) { //枚举三个符号的所有情况
+        for (int i = 0; i < 4 && !flag; i++) { // 枚举三个符号的所有情况
             op[0] = i;
             for (int j = 0; j < 4 && !flag; j++) {
                 op[1] = j;
                 for (int k = 0; k < 4 && !flag; k++) {
                     op[2] = k;
-                    if (cal24(nums, op)) { //符合条件就输出
+                    if (cal24(nums, op)) { // 符合条件就输出
                         for (int m = 0; m < 3; m++) {
                             cout << n2c[nums[m]] << Op[op[m]];
                         }
                         cout <<  n2c[nums[3]]  << endl;
-                        flag = true; //找到了，准备跳出所有循环
+                        flag = true; // 找到了，准备跳出所有循环
                     }
                 }
             }
