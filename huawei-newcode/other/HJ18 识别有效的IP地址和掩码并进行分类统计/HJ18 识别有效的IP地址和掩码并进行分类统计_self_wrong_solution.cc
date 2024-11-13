@@ -8,7 +8,6 @@ using namespace std;
 // 1. community-solution-failed;
 // 2. doubt-test-case-error;
 
-
 static bool veri_ip(string p);
 static bool veri_mask(string m);
 
