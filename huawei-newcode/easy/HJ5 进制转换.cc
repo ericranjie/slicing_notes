@@ -3,22 +3,20 @@
 using namespace std;
 
 void trans(string t) {
-    if (t.size() <= 2) {
+    if (t.size() <= 2) { // Guard: Invalid;
         cout << "0" << endl;
         return;
     }
 
-    int l = 0, r = 0;
-    for (int i = 2; i < t.size(); i++) {
+    int r = 0; // Result;
+    for (int i = 2; i < t.size(); i++) { // Start from index-2("0x");
         char c = t[i];
         int m = 0;
-        if (c >= '0' && c <= '9') { // num
+        if (c >= '0' && c <= '9') { // Is number;
             m = (c - '0');
-        } else if (c >= 'A' && c <= 'F') { // POE: not E
+        } else if (c >= 'A' && c <= 'F') { // Is alpha; POE: not E
             m = (c - 'A' + 10);
         }
-        
-        // cout << "-" << m << endl;
 
         int j = 1, k = t.size() - i - 1; // POE:
         while (k-- > 0) {
@@ -26,11 +24,7 @@ void trans(string t) {
         }
         m = m * j;
         r += m;
-
-        // cout << "--" << r << endl;
-        ++l;
     }
-
     cout << r << endl;
     return;
 }
@@ -38,12 +32,10 @@ void trans(string t) {
 int main() {
     string t;
     vector<string> v;
-    while (getline(cin, t)) {
+    while (getline(cin, t)) { // Multiple testcase;
         v.push_back(t);
         trans(t);
-        // cout << t << endl;
     }
 
     return 0;
 }
-// 64 位输出请用 printf("%lld")

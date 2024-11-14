@@ -14,6 +14,7 @@ int main() {
     int t;
     vector<int> vi, vr;
 
+    // Step-1: Input;
     cin >> ni;
     for (int i = 0; i < ni; i++) {
         cin >> t;
@@ -25,8 +26,9 @@ int main() {
         vr.push_back(t);
     }
 
+    // Step-2: Main;
     string res;
-    set<int> st(vr.begin(), vr.end());
+    set<int> st(vr.begin(), vr.end()); // TreeSet: Remove-duplicate;
     int all = 0;
     for (auto it = st.begin(); it != st.end(); it++) {
         int c = 0; // current-count
