@@ -5,24 +5,25 @@
 using namespace std;
 
 // std-cheat-solution:
+// need-reveal:
 int main(int argc, char *argv[]) {
-  int num = 0;
-  vector<string> raw;
+    int num = 0;
+    vector<string> raw;
 
-  cin >> num;
-  cin.ignore(256, '\n'); // POE:
+    cin >> num;
+    cin.ignore(256, '\n'); // POE:
 
-  for (int i = 0; i < num; i++) {
-    string tmp;
-    getline(cin, tmp);
-    raw.push_back(tmp);
-  }
+    for (int i = 0; i < num; i++) {
+      string tmp;
+      getline(cin, tmp);
+      raw.push_back(tmp);
+    }
 
-  sort(raw.begin(), raw.end());
+    sort(raw.begin(), raw.end());
 
-  for (int i = 0; i < num; i++) {
-    cout << raw[i] << endl;
-  }
+    for (int i = 0; i < num; i++) {
+      cout << raw[i] << endl;
+    }
 
-  return 0;
+    return 0;
 }
