@@ -13,14 +13,10 @@ vector<int> extract(string t) { // pre-condition: must-be-valid
             o += t[i] - '0';
         } else {
             v.push_back(o);
-            // cout << o << " ";
             o = 0; // reset
         }
     }
     v.push_back(o); // POE: remember-this
-    // cout << o << " ";
-    // cout << endl;
-
     return v;
 }
 
@@ -34,7 +30,6 @@ bool veri_mask(vector<int> v) { // POE: verify-mask
     int bit = 0;
     for (int i = v.size(); i >= 0; i--) {
         int a = v[i];
-        // cout << a << " " << nc << endl;
         bit = 0;
         while (a > 0) {
             ++bit;
@@ -42,7 +37,6 @@ bool veri_mask(vector<int> v) { // POE: verify-mask
             if (m == 0) {
                 one = false;
                 if (p == 1) {
-                    // cout << "111" << endl;
                     ++nc;
                     p = 0;
                 }
@@ -51,7 +45,6 @@ bool veri_mask(vector<int> v) { // POE: verify-mask
                 //     return false;
                 // }
                 if (p == 0) {
-                    // cout << "000" << endl;
                     ++nc;
                     p = 1;
                 }
@@ -64,7 +57,6 @@ bool veri_mask(vector<int> v) { // POE: verify-mask
                 p = 0;
             }
         }
-        // cout << "nc = " << nc << " " << bit << endl;
     }
     if (nc > 2) {
         return false;
@@ -95,28 +87,26 @@ int mask(int m, int a) {
         i = (mi & ai);
         r += i * pow(2, l);
 
-        // cout << mi << " " << ai << " " << r << endl;
         ++l;
         m = m >> 1;
         a = a >> 1;
     }
-    // cout << r << endl;
+
     return r;
 }
 
 int main() {
-    string m, a, b;
+    string m, a, b; // musk - ip1 - ip2;
     getline(cin, m);
     getline(cin, a);
     getline(cin, b);
-    // cout << m << " " << a << " " << b << endl;
 
     vector<int> vm, va, vb;
     vm = extract(m);
     va = extract(a);
     vb = extract(b);
 
-    // step-1: is-valid
+    // Step-1: Verify valid IP and mask;
     if (!veri(vm) || !veri(va) || !veri(vb)) {
         cout << 1 << endl;
         return 0;
@@ -127,14 +117,14 @@ int main() {
         return 0;
     }
 
-    // step-2: same(0)-or-not(2)
+    // Step-2: Verify same(0) or not(2);
     for (int i = 0; i < vm.size(); i++) {
         if (mask(vm[i], va[i]) != mask(vm[i], vb[i])) {
             cout << 2 << endl;
             return 0;
         }
      }
-    // mask(255, 192);
+
     cout << 0 << endl;
     return 0;
 }
@@ -164,5 +154,3 @@ int main() {
 // 255.255.255.0
 // 192.168.0.254
 // 192.168.0.1
-
-// 64 位输出请用 printf("%lld")
