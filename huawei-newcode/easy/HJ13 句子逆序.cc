@@ -2,13 +2,15 @@
 using namespace std;
 
 int main() {
-    string t, r, o; // reverse - output
+    string t, r, o; // target - reverse - output
     getline(cin, t);
 
+    // Step-1: Reverse all line;
     for (int i = t.size() - 1; i >= 0; i--)
         r.push_back(t[i]);
 
-    int p = 0;
+    // Step-2: Reverse each word;
+    int p = 0; // previous
     int i = 0;
     for (i = 0; i < r.size() - 1; i++) {
         if (r[i] == ' ') {
