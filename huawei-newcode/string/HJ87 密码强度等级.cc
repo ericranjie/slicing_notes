@@ -1,6 +1,7 @@
 #include <iostream>
 using namespace std;
 
+// need-reveal: ASCII singal;
 int main() {
     string p;
     getline(cin, p);
