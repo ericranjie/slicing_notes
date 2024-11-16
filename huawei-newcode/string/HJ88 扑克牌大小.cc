@@ -60,21 +60,20 @@ vector<string> extract(string t) {
         r.push_back("O");
     } else {
         r.push_back(t.substr(s, t.size() - s));
-        // cout << endl << t.substr(s, t.size() - s);
     }
-        return r;
-    }
+    return r;
+}
 
-    int main() {
-        string t;
-        getline(cin, t);
-        int s = 0;
-        for (int i = 0; i < t.size(); i++) {
-            if (t[i] == '-') {
-                s = i;
-                break;
-            }
+int main() {
+    string t;
+    getline(cin, t);
+    int s = 0;
+    for (int i = 0; i < t.size(); i++) {
+        if (t[i] == '-') {
+            s = i;
+            break;
         }
+    }
         string a = t.substr(0, s);
         string b = t.substr(s + 1, t.size() - s);
         // cout << a << endl << b << endl;
@@ -101,11 +100,6 @@ vector<string> extract(string t) {
         }
 
         if (m == 2 && n == 2) { // double-or-joker
-            // if (va[0] == "joker") {
-            //     cout << a << endl;
-            // } else if (vb[0] == "joker") {
-            //     cout << b << endl;
-            // } else { // double
                 if (trans(va[0]) > trans(vb[0])) {
                     cout << a << endl;
                 } else {
@@ -128,7 +122,7 @@ vector<string> extract(string t) {
 
         return 0;
     }
+
 // A-10
 // joker-4
 // J J J J-3 3 3 3
-// 64 位输出请用 printf("%lld")

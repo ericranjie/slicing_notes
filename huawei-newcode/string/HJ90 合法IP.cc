@@ -2,7 +2,7 @@
 #include <vector>
 using namespace std;
 
-// many-entrap:
+// need-reveal:many-entrap
 void veri(string t) { // verify
     int n = 0, nn = 0, nd = 0; // number-of-num & dot
 
