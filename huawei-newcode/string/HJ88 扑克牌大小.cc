@@ -88,7 +88,7 @@ int main() {
     }
 
 
-    // Step-3: double or joker;
+    // Step-3: double or joker or equal;
     if (m == 2 && n == 2) {
         if (trans(va[0]) > trans(vb[0])) cout << a << endl;
         else cout << b << endl;
