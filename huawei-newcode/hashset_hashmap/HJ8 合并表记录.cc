@@ -1,12 +1,10 @@
 #include <iostream>
 #include <algorithm>
-// #include <unordered_map>
 #include <map>
 using namespace std;
 
 int main() {
     int n, index[500], value[500];
-    // unordered_map<int, int> mp; // POE:
     map<int, int> mp;
     cin >> n;
 

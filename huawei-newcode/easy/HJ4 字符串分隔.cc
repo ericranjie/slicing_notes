@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (len % 8 != 0) {
-        int m = len % 8; // mod:
+        int m = len % 8; // m: mod
         m = 8 - m;
         for (int i = 0; i < m; i++) {
             cout << "0";
