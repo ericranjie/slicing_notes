@@ -55,15 +55,8 @@ void veri(string t) { // verify
 int main() {
     string t;
     vector<string> v;
-    while (cin >> t) {
-        v.push_back(t);
-        // cout << t;
-    }
-
-    for (int i = 0; i < v.size(); i++) {
-        veri(v[i]);
-    }
-
+    while (cin >> t) v.push_back(t);
+    for (int i = 0; i < v.size(); i++) veri(v[i]);
     return 0;
 }
 
