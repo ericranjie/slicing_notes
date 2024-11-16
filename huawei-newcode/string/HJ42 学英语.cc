@@ -18,10 +18,10 @@ vector<string> vtwe = { // larger-than-twenty
 };
 
 // need-optimize-solution:
+// need-reveal: complex
 string trans(int o, int t, int h) { // one-ten-hundred-digit
     string r;
 
-    // cout << "-: " << h << t << o << endl;
     if (h >= 1) { // POE: = 
         r += vone[h - 1]; // POE:
         r += " hundred "; // POE:
@@ -60,7 +60,6 @@ int main() {
     while (t > 0) {
         ++c;
         m = t % 10;
-        // cout << " m " << m << " c " << c << endl;
         
         if (c >= 4 && c < 7 && batch) { // POE: < 7
             string tmp = trans(one, two, thr);
@@ -73,35 +72,27 @@ int main() {
             string tmp = trans(one, two, thr);
             one = 0; two = 0; thr = 0;
             // tmp += " million "; // POE:
-            // tmp += " thousand ";
             res = tmp + res;
             batch = false;
         }
         
         if (c % 3 == 1) {
-            // cout << "--1: " << m << endl;
             one = m;
         } else if (c % 3 == 2) {
-            // cout << "--2: " << m << endl;
             two = m;
         } else if (c % 3 == 0) {
-            // cout << "--3: " << m << endl;
             thr = m;
             batch = true;
         }
 
-        // cout << one << two << thr << endl;
         t /= 10;
     }
 
-    // cout << one << two << thr << endl;
-    // if (c == 7 || c <= 3) {
-        string tmp = trans(one, two, thr);
-        if (c == 7)
-            tmp += "million ";
-        res = tmp + res;
-    // }
-    // cout << c;
+    string tmp = trans(one, two, thr);
+    if (c == 7)
+        tmp += "million ";
+    res = tmp + res;
+
     cout << res;
 
     return 0;
