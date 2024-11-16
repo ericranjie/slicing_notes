@@ -23,7 +23,6 @@ int main() {
     }
 
     if (!st.count(mod)) {
-        // st.insert(mod);
         res += mod;    
     } else {
         res /= 10; // POE:
@@ -32,4 +31,3 @@ int main() {
     cout << res;
     return 0;
 }
-// 64 位输出请用 printf("%lld")
