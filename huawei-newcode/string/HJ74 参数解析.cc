@@ -2,16 +2,16 @@
 #include <vector>
 using namespace std;
 
+// need-reveal: complex
 int main() {
     string t;
     getline(cin, t);
     vector<string> r;
 
-    bool dq = false; // double quotation
-    string o; // one parameter // POE:
+    bool dq = false; // dq: double quotation
+    string o; // o: one parameter // POE:
     for (int i = 0; i < t.size(); i++) {
         char c = t[i]; // current char
-        
         if (c == '\"') {
             if (!dq) {
                 dq = true;
@@ -38,17 +38,13 @@ int main() {
             }
         }
         o.push_back(c);
-        // cout << ": " << c << endl;
     }
-    if (o.size() > 0) {
+    if (o.size() > 0)
         r.push_back(o);
-    }
 
     cout << r.size() << endl;
-    for (int i = 0; i < r.size(); i++) {
+    for (int i = 0; i < r.size(); i++)
         cout << r[i] << endl;
-    }
 
     return 0;
 }
-// 64 位输出请用 printf("%lld")

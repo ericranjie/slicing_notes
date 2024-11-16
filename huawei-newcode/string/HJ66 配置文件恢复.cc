@@ -13,6 +13,7 @@ b addr  - xxx               - false
 */
 
 // cheat-solution:
+// need-reveal: complex
 map<string, string> d = { // dictionary
     {"reset",               "reset what"},
     {"reset board",         "borad fault"},
@@ -32,7 +33,7 @@ static string add = "add";
 static string del = "delete";
 static string abo = "abort";
 
-void veri(string t) { // verify
+void veri(string t) {
     int l = 0, r = 0; // space-index
     vector<string> v;
     for (int i = 0; i < t.size(); i++) {
@@ -40,17 +41,14 @@ void veri(string t) { // verify
         if (t[i] == ' ') {
             r = i;
             p = t.substr(l, r - l);
-            // cout << p << endl;
             v.push_back(p);
             l = i + 1;
             r = i + 1;
         }
     }
     v.push_back(t.substr(l, t.size() - l)); // POE: not(-1)
-    // cout << t.substr(l, t.size() - l) << endl;
-    // cout << "---" << endl;
 
-    // case-1: one-input
+    // Case-1: one input;
     if (v.size() == 1) { // reset
         string tmp = "reset";
         int n = v[0].size() > 5 ? 5 : v[0].size();
@@ -64,11 +62,9 @@ void veri(string t) { // verify
         return;
     }
 
-    // case-2: 2-input
+    // Case-2: 2 input;
     if (v.size() == 2) {
-        if (v[0].size() <= 0) { // guard:
-            return;
-        }
+        if (v[0].size() <= 0) return; // Guard:
         if (v[0][0] == 'r' && v[0].size() == 1 &&
             v[1][0] == 'b' && v[1].size() == 1) { // POE:
             cout << err << endl;
@@ -110,25 +106,15 @@ void veri(string t) { // verify
         }
     }
     cout << err << endl; // POE:
-    // cout << "---" << endl;
-    // for (int i = 0; i < v.size(); i++) {
-        // cout << v[i] << endl;
-    // }
-    
-
-
     return;
 }
 
 int main() {
     string t;
-    while (getline(cin, t)) {
-        // cout << "- " << t << endl;
-        veri(t);
-    }
-
+    while (getline(cin, t)) veri(t);
     return 0;
 }
+
 // r b
 // b a
 // bo a
