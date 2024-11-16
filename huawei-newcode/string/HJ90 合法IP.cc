@@ -19,10 +19,6 @@ void veri(string t) { // verify
             if (!nc) {
                 ++nn;
                 la = t[i] - '0';
-                // if (t[i] - '0' == 0) { // invalid-num:
-                //     cout << "NO" << endl;
-                //     return;
-                // }
             }
             nc = true;
         } else if (t[i] == '.') {
@@ -70,10 +66,10 @@ int main() {
 
     return 0;
 }
+
 // 1.3.8
 // 01.2.3.8
 // 1.0.3.8
 // 0.2.3.8
 // 1.2.3.08
 // +1.2.3.8
-// 64 位输出请用 printf("%lld")
