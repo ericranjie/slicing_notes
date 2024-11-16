@@ -3,7 +3,7 @@
 using namespace std;
 
 // std-cheat-solution:
-// TODO:
+// need-reveal:
 int main() {
     string raw;
     getline(cin, raw);
@@ -13,4 +13,3 @@ int main() {
     cout << raw << endl;
     return 0;
 }
-// 64 位输出请用 printf("%lld")
