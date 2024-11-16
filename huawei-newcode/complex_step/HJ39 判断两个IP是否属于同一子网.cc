@@ -3,10 +3,12 @@
 #include <cmath>
 using namespace std;
 
-vector<int> extract(string t) { // pre-condition: must-be-valid
+// Extract IP/mask from string to vector<int>;
+// Pre-condition: Must be valid;
+// need-reveal: complex;
+vector<int> extract(string t) { 
     vector<int> v;
-
-    int o = 0;
+    int o = 0; // one-number
     for (int i = 0; i < t.size(); i++) {
         if (t[i] != '.') {
             o *= 10;
@@ -20,30 +22,26 @@ vector<int> extract(string t) { // pre-condition: must-be-valid
     return v;
 }
 
-bool veri_mask(vector<int> v) { // POE: verify-mask
-    bool one = true;
-    int nc = 0; // 0-1-change-number
-    int p = 0; // pre = 0
-    if (v[0] < 255) { // POE:
+// Verify mask 0-1 continue;
+bool veri_mask(vector<int> v) { // POE:
+    int nc = 0; // nc: number-of-0-1-change
+    int p = 0; // p: pre = 0
+    if (v[0] < 255) // POE:
         return false;
-    }
+
     int bit = 0;
-    for (int i = v.size(); i >= 0; i--) {
-        int a = v[i];
+    for (int i = v.size(); i >= 0; i--) { // reverse-loop
+        int a = v[i]; // a: current
         bit = 0;
         while (a > 0) {
             ++bit;
-            int m = a % 2;
+            int m = a % 2; // m: mod
             if (m == 0) {
-                one = false;
                 if (p == 1) {
                     ++nc;
                     p = 0;
                 }
             } else if (m == 1) {
-                // if (!one) { // POE: must-not-have-this
-                //     return false;
-                // }
                 if (p == 0) {
                     ++nc;
                     p = 1;
@@ -58,22 +56,17 @@ bool veri_mask(vector<int> v) { // POE: verify-mask
             }
         }
     }
-    if (nc > 2) {
-        return false;
-    }
+    if (nc >= 2) return false; // POE:
+
     return true;
 }
 
-bool veri(vector<int> v) { // verify
-    if (v.size() != 4) {
-        return false;
-    }
+bool veri(vector<int> v) { // Verify IP and mask number;
+    if (v.size() != 4) return false;
 
-    for (int i = 0; i < 4; i++) {
-        if (!(v[i] >= 0 && v[i] <= 255)) {
+    for (int i = 0; i < 4; i++)
+        if (!(v[i] >= 0 && v[i] <= 255))
             return false;
-        }
-    }
 
     return true;
 }
@@ -96,7 +89,7 @@ int mask(int m, int a) {
 }
 
 int main() {
-    string m, a, b; // musk - ip1 - ip2;
+    string m, a, b; // mask - ip1 - ip2;
     getline(cin, m);
     getline(cin, a);
     getline(cin, b);
@@ -124,7 +117,6 @@ int main() {
             return 0;
         }
      }
-
     cout << 0 << endl;
     return 0;
 }
