@@ -7,16 +7,12 @@ using namespace std;
 int main() {
     int a;
     cin >> a;
-    for (int i = 0; i < 21; i++) {
-        for (int j = 0; j < 34; j++) {
-            for (int k = 0; k < 101; k += 3) {
+    for (int i = 0; i < 21; i++)
+        for (int j = 0; j < 34; j++)
+            for (int k = 0; k < 101; k += 3)
                 if ((i * 5 + j * 3 + k / 3) == 100 &&
-                    (i + j + k) == 100) {
+                    (i + j + k) == 100)
                     cout << i << " " << j << " " << k << endl;
-                } 
-            }
-        }
-    }
     return 0;
 }
 
