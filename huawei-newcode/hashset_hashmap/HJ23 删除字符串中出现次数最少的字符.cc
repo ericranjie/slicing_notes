@@ -3,41 +3,30 @@
 using namespace std;
 
 // not-hash-solution:
+// need-reveal: confuse
 int main() {
     string t;
     getline(cin, t);
 
-    int mp[128] = {0};
-    for (int i = 0; i < t.size(); i++) {
+    // Step-1: Statistic character's count number;
+    int mp[128] = {0}; // mp: map of character -> number
+    for (int i = 0; i < t.size(); i++)
         ++mp[t[i]];
-    }
 
     vector<vector<int>> b(20, vector<int>(0, 0));
-    for (int i = 0; i < 128; i++) {
-        // if (mp[i] > 0) {
-        // }
-        b[mp[i]].push_back(i);
-    }
+    for (int i = 0; i < 128; i++)
+        b[mp[i]].push_back(i); // b: number -> character index
 
     int i = 1;
-    for (i = 1; i <= 20; i++) {
-        if (b[i].size() > 0) {
-            // for (int j = 0; j < b[i].size(); j++) {
-            //     // cout << i << " " << b[i][j] << endl;
-            // }
-            break;
-        }
-    }
+    for (i = 1; i <= 20; i++)
+        if (b[i].size() > 0) break;
 
     vector<int> d = b[i];
     bool c = false;
     for (int j = 0; j < t.size(); j++) {
-        for (int k = 0; k < d.size(); k++) {
-            if (t[j] == d[k]) {
-                // cout << endl << "c: " << t[j] << endl;
+        for (int k = 0; k < d.size(); k++)
+            if (t[j] == d[k])
                 c = true;
-            }
-        }
         if (c) {
             c = false;
             continue;
@@ -46,7 +35,5 @@ int main() {
             c = false;
         }
     }
-
     return 0;
 }
-// 64 位输出请用 printf("%lld")

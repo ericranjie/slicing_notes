@@ -2,107 +2,42 @@
 #include <vector>
 using namespace std;
 
+// need-recite: BFS template;
 void helper(int i, int j, int m, int n, vector<vector<int>>& v,
             vector<vector<int>>& one,
             vector<vector<int>>& res) {
-    // cout << i << " " << j << " <- ";
-    if (i == m - 1 && j == n - 1) {
-        // cout << "f1" << endl;
+    if (i == m - 1 && j == n - 1) { // Guard: BFS come to end;
         res = one;
         return; // success
     }
-#if 0
-    else if (i == m - 1 && j < n - 1) { // last-row-block
-        if (v[i][j + 1] == 1 && v[i - 1][j] == 1) {
-            // cout << "f2" << endl;
-            return; // failed
-        } else {
-            if (v[i][j + 1] == 0) {
-                one.push_back({i, j + 1});
-                v[i][j + 1] = 1;
-                helper(i, j + 1, m, n, v, one, res);
-                v[i][j + 1] = 0;
-                one.pop_back();
-            } else if (v[i - 1][j] == 0) {
-                one.push_back({i - 1, j});
-                v[i - 1][j] = 1;
-                helper(i - 1, j, m, n, v, one, res);
-                v[i - 1][j] = 0;
-                one.pop_back();
-            }
-        }
-    } else if (j == n - 1 && i < m - 1) {
-        if (v[i + 1][j] == 1 && v[i][j - 1] == 1) { // last-column-block
-            // cout << "f3" << endl;
-            return; // failed
-        } else {
-            if (v[i + 1][j] == 0) {
-                one.push_back({i + 1, j});
-                v[i + 1][j] = 1;
-                helper(i + 1, j, m, n, v, one, res);
-                v[i + 1][j] = 0;
-                one.pop_back();
-            } else if (v[i][j - 1] == 0) {
-                one.push_back({i, j - 1});
-                v[i][j - 1] = 1;
-                helper(i, j - 1, m, n, v, one, res);
-                v[i][j - 1] = 0;
-                one.pop_back();
-            }
-        }
-    } else if (i > 0 && i < m - 1 &&
-               j > 0 && j < n - 1) {
-        if (v[i][j + 1] == 1 && v[i + 1][j] == 1 &&
-                v[i][j - 1] == 1 && v[i - 1][j] == 1) {
-            // cout << "f4" << endl;
-            return; // failed
-        }
-        // POE:
-        if (v[i + 1][j] == 0) {
-            one.push_back({i + 1, j});
-            helper(i + 1, j, m, n, v, one, res);
-            one.pop_back();
-        }
-        if (v[i][j + 1] == 0) {
-            one.push_back({i, j + 1});
-            helper(i, j + 1, m, n, v, one, res);
-            one.pop_back();
-        }
-    }
-#endif
-    if (j < n - 1 &&
-        v[i][j + 1] == 0) {
+    if (j < n - 1 && v[i][j + 1] == 0) {
         one.push_back({i, j + 1});
         v[i][j] = 1;
         helper(i, j + 1, m, n, v, one, res);
         v[i][j] = 0;
         one.pop_back();
     }
-    if (j > 0 &&
-        v[i][j - 1] == 0) {
+    if (j > 0 && v[i][j - 1] == 0) {
         one.push_back({i, j - 1});
         v[i][j] = 1;
         helper(i, j - 1, m, n, v, one, res);
         v[i][j] = 0;
         one.pop_back();
     }
-    if (i < m - 1 &&
-        v[i + 1][j] == 0) {
+    if (i < m - 1 && v[i + 1][j] == 0) {
         one.push_back({i + 1, j});
         v[i][j] = 1;
         helper(i + 1, j, m, n, v, one, res);
         v[i][j] = 0;
         one.pop_back();
     }
-    if (i > 0 &&
-        v[i - 1][j] == 0) {
+    if (i > 0 && v[i - 1][j] == 0) {
         one.push_back({i - 1, j});
         v[i][j] = 1;
         helper(i - 1, j, m, n, v, one, res);
         v[i][j] = 0;
         one.pop_back();
     }
-
     return;
 }
 
@@ -113,29 +48,26 @@ int main() {
     cin >> n;
     cin.ignore(256, '\n'); // POE:
 
+    // Step-1: Input;
     char t;
     for (int i = 0; i < m; i++) {
         vector<int> o;
         for (int j = 0; j < n; j++) {
             cin >> t;
-            o.push_back(t - '0');
-            // cout << t << " ";
+            o.push_back(t - '0'); // character into one-line
         }
-        v.push_back(o);
-        // cout << endl;
+        v.push_back(o); // one-line push into 2d-vector
     }
 
+
+    // Step-2: Start BFS recursive;
     vector<vector<int>> one;
     vector<vector<int>> res;
     one.push_back({0, 0});
     helper(0, 0, m, n, v, one, res);
 
-    for (int i = 0; i < res.size(); i++) {
+    for (int i = 0; i < res.size(); i++)
         cout << "(" << res[i][0] << "," << res[i][1] << ")" << endl;
-    }
-
-    // cout << res.size() << endl;
-
     return 0;
 }
 
@@ -178,5 +110,3 @@ int main() {
 // (4,2)
 // (4,3)
 // (4,4)
-
-// 64 位输出请用 printf("%lld")
