@@ -2,31 +2,29 @@
 using namespace std;
 
 int main() {
-    int n; // number-of-music
-    string t; // command-sequence
+    int n; // n: number of music
+    string t; // t: command sequence
     
-    // step-0: input
+    // Step-0: Input;
     cin >> n;
     cin.ignore(256, '\n'); // POE:
     getline(cin, t);
-    // cout << n;
-    // cout << t;
 
-    // step-1: define-window
-    int l = 0, r = 0; // window-left-right-bounder
-    bool w = false; // window-exist
+    // Step-1: Define window;
+    int l = 0, r = 0; // l-r: window's left right bounder
+    bool w = false; // w: window exist
     if (n <= 4) {
         l = 0;
         r = n - 1; // POE: must-(-1)
-        w = false; // window-doesnot-exist
+        w = false; // window doesn't exist
     } else {
         l = 0;
         r = 3; // POE: not-4
-        w = true; // window-exist
+        w = true; // window exist
     }
 
-    // step-2: start-moving
-    int p = 0; // present
+    // Step-2: Start moving;
+    int p = 0; // p: present
     for (int i = 0; i < t.size(); i++) {
         if (t[i] == 'U') { // up
             if (p == l && p != 0 && w) { // left-bound
@@ -57,7 +55,6 @@ int main() {
             } else {
                 ++p;
             }
-            // cout << "D: " << p << l << r << endl;
         }
     }
 
@@ -69,6 +66,6 @@ int main() {
 
     return 0;
 }
+
 // 2
 // DUDUDDUUDUDDDDUDUDDDUUDDUDDUDUDUDDDUDUDUUDDUUDDUUUDUDUUUDDUDUDDUUDUDDDDUDUDUUDUDDDDDUU
-// 64 位输出请用 printf("%lld")

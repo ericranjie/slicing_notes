@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-// #include <algorithm>
 #include <map>
 using namespace std;
 
@@ -17,7 +16,6 @@ void helper(string t) {
     for (int i = 0; i < 26; i++) {
         if (c[i] != 0) {
             mp[c[i]].push_back((char)(i + 'a'));
-            // cout << c[i] << (char)(i + 'a') << endl;
         }
     }
 
@@ -25,7 +23,6 @@ void helper(string t) {
     for (auto it = mp.rbegin(); it != mp.rend(); it++) {
         for (int j = 0; j < it->second.size(); j++) {
             r += (l * it->first);
-            // cout << "l = " << l << " num = " << it->first << " c = " << it->second[j] << endl;
             --l;
         }
         // --l; // POE
@@ -47,9 +44,7 @@ int main() {
         getline(cin, t);
         v.push_back(t);
         helper(t);
-        // cout << tmp << endl;
     }
 
     return 0;
 }
-// 64 位输出请用 printf("%lld")
