@@ -7,9 +7,9 @@ int main() {
     unordered_set<int> st;
     cin >> a;
 
-    int cur = a, quo, mod;
-    quo = cur / 10;
-    mod = cur % 10;
+    int quo, mod;
+    quo = a / 10; // quo: quotient
+    mod = a % 10; // mod: module
 
     while (quo > 0) {
         if (!st.count(mod)) {
@@ -17,16 +17,13 @@ int main() {
             res += mod;
             res *= 10;
         }
-        cur = quo;
-        quo = cur / 10;
-        mod = cur % 10;
+        a = quo;
+        quo = a / 10;
+        mod = a % 10;
     }
 
-    if (!st.count(mod)) {
-        res += mod;    
-    } else {
-        res /= 10; // POE:
-    }
+    if (!st.count(mod)) res += mod;    
+    else res /= 10; // POE: need-divide-10
 
     cout << res;
     return 0;

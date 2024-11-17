@@ -60,12 +60,6 @@ int main() {
         }
     }
 
-    // while (ph) {
-    //     cout << ph->value << " ";
-    //     ph = ph->p_next;
-    // }
-    // cout << endl;
-
     // step-n: find-node-and-erase:
     struct node *dummy = (struct node *)malloc(sizeof(struct node));
     dummy->value = -1;
