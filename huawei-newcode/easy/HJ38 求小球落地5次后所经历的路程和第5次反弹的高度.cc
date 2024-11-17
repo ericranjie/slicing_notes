@@ -3,7 +3,7 @@ using namespace std;
 
 // cheat-solution:
 int main() {
-    double d;
+    double d; // d: start height
     cin >> d;
 
     double r = 0;
@@ -17,4 +17,3 @@ int main() {
 
     return 0;
 }
-// 64 位输出请用 printf("%lld")
