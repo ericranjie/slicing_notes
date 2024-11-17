@@ -2,12 +2,12 @@
 // #include <vector>
 using namespace std;
 
-// recite-all:
+// need-recite-all:
 int main() {
     int n;
     cin >> n;
 
-    if (n == 1 || n == 2) {
+    if (n == 1 || n == 2) { // Guard: no
         cout << -1 << endl;
         return 0;
     }
@@ -15,7 +15,6 @@ int main() {
         cout << 2 << endl;
         return 0;
     }
-
     if ((n % 2 == 0) &&
         (n % 4 == 0)) {
         cout << 3 << endl;
