@@ -12,45 +12,44 @@ using namespace std;
 167969729
 */
 
+// need-familiar: math;
 int main() {
-    vector<string> v;
+    vector<string> v; // v: string vector of IP
     string t;
-    long long d, r = 0; // POE: int-d-too-short
+    long long d, r = 0; // d-r: dex, result; POE: int-d-too-short
     getline(cin, t);
     cin >> d;
 
-    string o;
+    string o; // o: one integer string
     for (int i = 0; i < t.size(); i++) {
-        if (t[i] != '.') {
-            o.push_back(t[i]);
-        } else {
+        if (t[i] != '.') o.push_back(t[i]);
+        else {
             v.push_back(o);
             o.resize(0);
             continue;
         }
     }
 
-    // transfer-to-dex:
+    // Step-1: IP string transfer to dex;
     string t1;
     int dex[4];
     v.push_back(o);
     for (int i = 0; i < v.size(); i++) {
         o = v[i];
-        r = 0; // one-dex
+        r = 0; // r: one dex
         for (int j = 0; j < o.size(); j++) {
-            char c = o[j];
             r *= 10; // POE: dont-reverse-with-down-code
-            r += (c - '0');
+            r += (o[j] - '0');
         }
         dex[i] = r;
     }
-    r = 0; // reuse-result
+    r = 0; // reset: reuse result
     r = dex[0] * pow(2, 24) + dex[1] * pow(2, 16) + dex[2] * pow(2, 8)
         + dex[3] * pow(2, 0);
     cout << r << endl;
 
     
-    // Step-2: Solve second input;
+    // Step-2: Dex to string IP;
     int a = 0;
     // highest
     a = d / pow(2, 24);
@@ -70,5 +69,6 @@ int main() {
 
     return 0;
 }
+
 // 39.66.68.72
 // 3868643487
