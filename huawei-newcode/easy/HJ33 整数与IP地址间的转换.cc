@@ -64,8 +64,8 @@ int main() {
     cout << to_string(a) << ".";
 
     d = d - a * pow(2, 8);
-    a = d / pow(2, 1);
-    cout << to_string(d);
+    a = d / pow(2, 0);
+    cout << to_string(a);
 
     return 0;
 }
