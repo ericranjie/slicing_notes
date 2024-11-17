@@ -1,6 +1,7 @@
 #include <iostream>
 using namespace std;
 
+// need-familiar: math;
 int helper(int num) {
     int quo = 0, mod = 0, cur = num, res = 0;
 
@@ -28,4 +29,3 @@ int main() {
 
     return 0;
 }
-// 64 位输出请用 printf("%lld")
