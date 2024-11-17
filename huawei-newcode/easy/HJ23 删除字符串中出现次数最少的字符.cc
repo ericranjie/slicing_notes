@@ -15,13 +15,13 @@ int main() {
 
     vector<vector<int>> b(20, vector<int>(0, 0));
     for (int i = 0; i < 128; i++)
-        b[mp[i]].push_back(i); // b: number -> character index
+        b[mp[i]].push_back(i); // b: number -> character
 
     int i = 1;
     for (i = 1; i <= 20; i++)
         if (b[i].size() > 0) break;
 
-    vector<int> d = b[i];
+    vector<int> d = b[i]; // d: character in ASCII
     bool c = false;
     for (int j = 0; j < t.size(); j++) {
         for (int k = 0; k < d.size(); k++)
