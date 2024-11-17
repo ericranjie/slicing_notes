@@ -42,7 +42,6 @@ int main() {
             r *= 10; // POE: dont-reverse-with-down-code
             r += (c - '0');
         }
-        // cout << r << endl;
         dex[i] = r;
     }
     r = 0; // reuse-result
@@ -51,7 +50,7 @@ int main() {
     cout << r << endl;
 
     
-    // solve-second-input:
+    // Step-2: Solve second input;
     int a = 0;
     // highest
     a = d / pow(2, 24);
