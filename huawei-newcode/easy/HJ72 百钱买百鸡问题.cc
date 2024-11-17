@@ -3,11 +3,10 @@
 #include <set>
 using namespace std;
 
+// need-familiar: math;
 int main() {
     int a;
     cin >> a;
-    // vector<vector<int>> res;
-
     for (int i = 0; i < 21; i++) {
         for (int j = 0; j < 34; j++) {
             for (int k = 0; k < 101; k += 3) {
@@ -18,7 +17,6 @@ int main() {
             }
         }
     }
-
     return 0;
 }
 
@@ -96,4 +94,3 @@ m c
 3 1
 5 1
 #endif
-// 64 位输出请用 printf("%lld")
