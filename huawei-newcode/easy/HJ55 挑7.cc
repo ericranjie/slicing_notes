@@ -4,13 +4,12 @@ using namespace std;
 
 // brute-force-solution:(cheat)
 // need-reveal:
-bool iss(int a) {
+bool iss(int a) { // iss: is seven
     while (a >= 1) {
-        int m = a % 10;
+        int m = a % 10; // m: module
         if (m == 7) return true;
         a = a / 10;
     }
-
     return false;
 }
 

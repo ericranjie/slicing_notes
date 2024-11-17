@@ -35,7 +35,6 @@ int main() {
     int dex[4];
     v.push_back(o);
     for (int i = 0; i < v.size(); i++) {
-        // cout << v[i] << endl;
         o = v[i];
         r = 0; // one-dex
         for (int j = 0; j < o.size(); j++) {
@@ -47,28 +46,25 @@ int main() {
         dex[i] = r;
     }
     r = 0; // reuse-result
-    // for (int i = 0; i < 4; i++) {
-        // cout << dex[i] << " ";
     r = dex[0] * pow(2, 24) + dex[1] * pow(2, 16) + dex[2] * pow(2, 8)
         + dex[3] * pow(2, 0);
     cout << r << endl;
-    // }
+
     
     // solve-second-input:
     int a = 0;
     // highest
     a = d / pow(2, 24);
-    // cout << d << endl;
     cout << to_string(a) << ".";
-    //
+
     d = d - a * pow(2, 24);
     a = d / pow(2, 16);
     cout << to_string(a) << ".";
-    //
+
     d = d - a * pow(2, 16);
     a = d / pow(2, 8);
     cout << to_string(a) << ".";
-    //
+
     d = d - a * pow(2, 8);
     a = d / pow(2, 1);
     cout << to_string(d);
@@ -77,4 +73,3 @@ int main() {
 }
 // 39.66.68.72
 // 3868643487
-// 64 位输出请用 printf("%lld")
