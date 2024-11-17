@@ -3,6 +3,7 @@
 using namespace std;
 
 // brute-force-solution:(cheat)
+// need-reveal:
 bool iss(int a) {
     while (a >= 1) {
         int m = a % 10;
@@ -21,10 +22,8 @@ int main() {
     for (int i = 1; i * 7 <= n; i++) {
         int t = i * 7;
         ++r;
-        // cout << ": " << i << endl;
-        if (!st.count(t)) {
+        if (!st.count(t))
             st.insert(t);
-        }
     }
 
     for (int i = 0; i <= n; i++) {
@@ -33,13 +32,10 @@ int main() {
                 continue;
             } else {
                 st.insert(i);
-                // cout << ": " << i << endl;
                 ++r;
             }
         }
     }
-
     cout << r;
     return 0;
 }
-// 64 位输出请用 printf("%lld")
