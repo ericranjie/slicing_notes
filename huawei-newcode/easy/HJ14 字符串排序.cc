@@ -8,21 +8,21 @@ using namespace std;
 // need-reveal:
 int main(int argc, char *argv[]) {
     int num = 0;
-    vector<string> raw;
+    vector<string> r; // r: raw
 
     cin >> num;
     cin.ignore(256, '\n'); // POE:
 
     for (int i = 0; i < num; i++) {
-      string tmp;
-      getline(cin, tmp);
-      raw.push_back(tmp);
+      string t;
+      getline(cin, t);
+      r.push_back(t);
     }
 
-    sort(raw.begin(), raw.end());
+    sort(r.begin(), r.end());
 
     for (int i = 0; i < num; i++) {
-      cout << raw[i] << endl;
+      cout << r[i] << endl;
     }
 
     return 0;
