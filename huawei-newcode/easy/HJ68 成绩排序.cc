@@ -7,18 +7,15 @@ using namespace std;
 // stl-map-cheat-solution:
 int main() {
     int n, d;
-    map<int, vector<string>> mp;
+    map<int, vector<string>> mp; // mp: map of score -> name
     cin >> n;
-    cin >> d;
+    cin >> d; // d: 0 ascend, 1 descend
     cin.ignore(256, '\n'); // POE:
-    // vector<pair<string, int>> v;
 
-    // cout << "-" << n << " " << d << endl;
-
+    // Step-1: Input;
     string t;
     while (getline(cin, t)) {
         string name; int score = 0; bool space = false;
-        // cout << "--" << t << endl;
         for (int i = 0; i < t.size(); i++) {
             if (t[i] == ' ') {
                 space = true;
@@ -28,14 +25,11 @@ int main() {
                     score *= 10;
                     score += (t[i] - '0');
                 }
-            } else {
-                if (!space) {
+            } else
+                if (!space)
                     name.push_back(t[i]);
-                }
-            }
         }
         mp[score].push_back(name);
-        // cout << name << to_string(score) << endl;
     }
 
     if (d == 1) {
@@ -44,7 +38,6 @@ int main() {
                 cout << it->second[i] << " ";
                 cout << it->first << endl;
             }
-            // cout << endl;
         }
     } else if (d == 0) {
         for (auto it = mp.rbegin(); it != mp.rend(); it++) {
@@ -52,12 +45,8 @@ int main() {
                 cout << it->second[i] << " ";
                 cout << it->first << endl;
             }
-            // cout << endl;
         }
     }
 
     return 0;
 }
-// } else if ((t[i] >= 'a' && t[i] <= 'z') ||
-//     (t[i] >= 'A' && t[i] <= 'Z'))
-// 64 位输出请用 printf("%lld")
